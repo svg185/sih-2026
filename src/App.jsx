@@ -25,7 +25,30 @@ function App() {
     if (!file) return;
 
     setScreening(true);
-    setResult(null);
+    setResult({
+  status: "Verified",
+  confidence: 94,
+  riskScore: 8,
+  document: "Identity Document",
+  faceMatch: 98,
+  authenticity: 96,
+  ocrAccuracy: 97,
+  tampering: "Not Detected",
+  risk: "Low Risk",
+  indicators: [
+    "Document structure appears authentic",
+    "No suspicious modifications detected",
+    "Face similarity is within acceptable range",
+    "Extracted text is consistent",
+  ],
+  extractedData: {
+    documentType: "Identity Card",
+    name: "Sample User",
+    dateOfBirth: "XX/XX/XXXX",
+    documentNumber: "XXXX-XXXX-XXXX",
+    issuingAuthority: "Government Authority",
+  },
+});
 
     setTimeout(() => {
       setScreening(false);
@@ -299,83 +322,251 @@ function App() {
 
         </div>
 
-        {/* Screening Result */}
-        {result && (
-          <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-slate-900 p-8">
+        {/* Advanced Screening Result */}
+{result && (
+  <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-8">
 
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    {/* Result Header */}
+    <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
 
-              <div>
-                <p className="text-sm text-slate-400">
-                  AI Screening Result
-                </p>
+      <div>
+        <p className="text-sm text-slate-400">
+          AI Screening Complete
+        </p>
 
-                <h3 className="mt-1 text-2xl font-bold text-emerald-400">
-                  ✓ {result.status}
-                </h3>
-              </div>
+        <h3 className="mt-1 text-3xl font-bold text-emerald-400">
+          ✓ {result.status}
+        </h3>
 
-              <div className="rounded-xl bg-emerald-500/10 px-5 py-3 text-center">
-                <p className="text-xs text-slate-400">
-                  AI Confidence
-                </p>
+        <p className="mt-2 text-sm text-slate-500">
+          Automated identity and document authenticity analysis
+        </p>
+      </div>
 
-                <p className="text-2xl font-bold text-emerald-400">
-                  {result.confidence}%
-                </p>
-              </div>
+      <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-8 py-4 text-center">
+        <p className="text-xs text-slate-400">
+          AI Confidence
+        </p>
 
-            </div>
+        <p className="mt-1 text-4xl font-bold text-emerald-400">
+          {result.confidence}%
+        </p>
+      </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    </div>
 
-              <div className="rounded-xl bg-slate-950 p-4">
-                <p className="text-xs text-slate-500">
-                  Document Type
-                </p>
-                <p className="mt-2 font-medium">
-                  {result.document}
-                </p>
-              </div>
+    {/* Risk Score */}
+    <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-950 p-6">
 
-              <div className="rounded-xl bg-slate-950 p-4">
-                <p className="text-xs text-slate-500">
-                  Face Match
-                </p>
-                <p className="mt-2 font-medium text-emerald-400">
-                  {result.faceMatch}
-                </p>
-              </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-slate-400">
+            Overall Risk Score
+          </p>
 
-              <div className="rounded-xl bg-slate-950 p-4">
-                <p className="text-xs text-slate-500">
-                  Tampering
-                </p>
-                <p className="mt-2 font-medium text-emerald-400">
-                  {result.tampering}
-                </p>
-              </div>
+          <p className="mt-1 text-2xl font-bold text-emerald-400">
+            {result.riskScore}/100
+          </p>
+        </div>
 
-              <div className="rounded-xl bg-slate-950 p-4">
-                <p className="text-xs text-slate-500">
-                  Risk Level
-                </p>
-                <p className="mt-2 font-medium text-emerald-400">
-                  {result.risk}
-                </p>
-              </div>
+        <span className="rounded-full bg-emerald-500/10 px-4 py-2 text-sm text-emerald-400">
+          {result.risk}
+        </span>
+      </div>
 
-            </div>
+      <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-800">
+        <div
+          className="h-full rounded-full bg-emerald-500"
+          style={{ width: `${100 - result.riskScore}%` }}
+        />
+      </div>
 
-            <div className="mt-6 rounded-xl border border-blue-500/10 bg-blue-500/5 p-4">
-              <p className="text-sm text-blue-300">
-                AI analysis completed successfully. No significant
-                authenticity or tampering indicators were detected.
-              </p>
-            </div>
+      <p className="mt-2 text-xs text-slate-500">
+        Lower score indicates lower fraud risk
+      </p>
 
+    </div>
+
+    {/* Verification Checks */}
+    <div className="mt-6">
+
+      <h4 className="text-lg font-semibold">
+        Verification Checks
+      </h4>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+
+        <div className="rounded-xl border border-slate-800 bg-slate-950 p-5">
+          <p className="text-sm text-slate-400">
+            Document Authenticity
+          </p>
+
+          <p className="mt-3 text-2xl font-bold text-emerald-400">
+            {result.authenticity}%
+          </p>
+
+          <p className="mt-1 text-xs text-emerald-500">
+            ✓ Authentic
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-slate-800 bg-slate-950 p-5">
+          <p className="text-sm text-slate-400">
+            Face Match
+          </p>
+
+          <p className="mt-3 text-2xl font-bold text-emerald-400">
+            {result.faceMatch}%
+          </p>
+
+          <p className="mt-1 text-xs text-emerald-500">
+            ✓ Strong Match
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-slate-800 bg-slate-950 p-5">
+          <p className="text-sm text-slate-400">
+            OCR Accuracy
+          </p>
+
+          <p className="mt-3 text-2xl font-bold text-blue-400">
+            {result.ocrAccuracy}%
+          </p>
+
+          <p className="mt-1 text-xs text-blue-400">
+            ✓ Text Verified
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-slate-800 bg-slate-950 p-5">
+          <p className="text-sm text-slate-400">
+            Tampering Detection
+          </p>
+
+          <p className="mt-3 text-lg font-bold text-emerald-400">
+            ✓ {result.tampering}
+          </p>
+
+          <p className="mt-1 text-xs text-slate-500">
+            No modification indicators
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    {/* Extracted Information */}
+    <div className="mt-8">
+
+      <h4 className="text-lg font-semibold">
+        Extracted Information
+      </h4>
+
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+
+        <div className="rounded-xl bg-slate-950 p-4">
+          <p className="text-xs text-slate-500">
+            Document Type
+          </p>
+          <p className="mt-1 font-medium">
+            {result.extractedData.documentType}
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-slate-950 p-4">
+          <p className="text-xs text-slate-500">
+            Name
+          </p>
+          <p className="mt-1 font-medium">
+            {result.extractedData.name}
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-slate-950 p-4">
+          <p className="text-xs text-slate-500">
+            Date of Birth
+          </p>
+          <p className="mt-1 font-medium">
+            {result.extractedData.dateOfBirth}
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-slate-950 p-4">
+          <p className="text-xs text-slate-500">
+            Document Number
+          </p>
+          <p className="mt-1 font-medium">
+            {result.extractedData.documentNumber}
+          </p>
+        </div>
+
+        <div className="rounded-xl bg-slate-950 p-4 md:col-span-2">
+          <p className="text-xs text-slate-500">
+            Issuing Authority
+          </p>
+          <p className="mt-1 font-medium">
+            {result.extractedData.issuingAuthority}
+          </p>
+        </div>
+
+      </div>
+    </div>
+
+    {/* Risk Indicators */}
+    <div className="mt-8">
+
+      <h4 className="text-lg font-semibold">
+        AI Risk Analysis
+      </h4>
+
+      <div className="mt-4 space-y-3">
+
+        {result.indicators.map((indicator, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-950 p-4"
+          >
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/10 text-sm text-emerald-400">
+              ✓
+            </span>
+
+            <span className="text-sm text-slate-300">
+              {indicator}
+            </span>
           </div>
-        )}
+        ))}
+
+      </div>
+
+    </div>
+
+    {/* Final Message */}
+    <div className="mt-8 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+
+      <div className="flex gap-3">
+
+        <span className="text-xl">
+          🛡️
+        </span>
+
+        <div>
+          <p className="font-semibold text-emerald-400">
+            Low Fraud Risk
+          </p>
+
+          <p className="mt-1 text-sm text-slate-400">
+            The document passed the current automated screening
+            checks. Further verification can be performed through
+            the backend AI service.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
 
       </main>
     </div>
