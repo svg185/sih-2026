@@ -1,932 +1,372 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 function App() {
-  const fileInputRef = useRef(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanResult, setScanResult] = useState(null);
+  const [error, setError] = useState("");
 
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [screening, setScreening] = useState(false);
-  const [result, setResult] = useState(null);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("All");
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "application/pdf",
+  ];
 
-  const [history, setHistory] = useState([
-    {
-      id: "SCR-1248",
-      document: "Aadhaar Card",
-      status: "Verified",
-      confidence: 97,
-      risk: "Low",
-      time: "2 min ago",
-    },
-    {
-      id: "SCR-1247",
-      document: "Passport",
-      status: "Suspicious",
-      confidence: 71,
-      risk: "Medium",
-      time: "18 min ago",
-    },
-    {
-      id: "SCR-1246",
-      document: "Driving License",
-      status: "Verified",
-      confidence: 95,
-      risk: "Low",
-      time: "42 min ago",
-    },
-    {
-      id: "SCR-1245",
-      document: "PAN Card",
-      status: "Fake Detected",
-      confidence: 32,
-      risk: "High",
-      time: "1 hour ago",
-    },
-  ]);
+  const handleFile = (file) => {
+    setError("");
+    setScanResult(null);
 
-  const filteredHistory = history.filter((item) => {
-    const searchText = search.toLowerCase();
+    if (!file) return;
 
-    const matchesSearch =
-      item.document.toLowerCase().includes(searchText) ||
-      item.id.toLowerCase().includes(searchText);
-
-    const matchesFilter =
-      filter === "All" || item.status === filter;
-
-    return matchesSearch && matchesFilter;
-  });
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files?.[0];
-
-    if (!selectedFile) return;
-
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      alert("File size must be less than 10MB.");
+    if (!allowedTypes.includes(file.type)) {
+      setError("Invalid file format. Please upload JPG, PNG or PDF.");
       return;
     }
 
-    setFile(selectedFile);
-    setResult(null);
-
-    if (selectedFile.type.startsWith("image/")) {
-      const url = URL.createObjectURL(selectedFile);
-      setPreview(url);
-    } else {
-      setPreview(null);
+    if (file.size > 10 * 1024 * 1024) {
+      setError("File size must be less than 10 MB.");
+      return;
     }
+
+    setSelectedFile(file);
   };
 
-  const removeFile = () => {
-    setFile(null);
-    setPreview(null);
-    setResult(null);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const handleFileChange = (event) => {
+    handleFile(event.target.files[0]);
   };
 
-  const handleScreening = () => {
-    if (!file || screening) return;
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setIsDragging(false);
 
-    setScreening(true);
-    setResult(null);
+    const file = event.dataTransfer.files[0];
+    handleFile(file);
+  };
 
+  const startScreening = () => {
+    if (!selectedFile) {
+      setError("Please select a document first.");
+      return;
+    }
+
+    setError("");
+    setIsScanning(true);
+    setScanResult(null);
+
+    // Demo AI screening simulation
     setTimeout(() => {
-      const newScreening = {
-        id: `SCR-${1249 + history.length}`,
-        document: file.name,
-        status: "Verified",
-        confidence: 94,
-        risk: "Low",
-        time: "Just now",
-      };
+      setIsScanning(false);
 
-      setHistory((prev) => [newScreening, ...prev]);
-
-      setResult({
+      setScanResult({
         status: "Verified",
-        confidence: 94,
-        riskScore: 8,
-        document: file.name,
-        faceMatch: 98,
-        authenticity: 96,
-        ocrAccuracy: 97,
-        tampering: "Not Detected",
-        risk: "Low Risk",
-        indicators: [
-          "Document structure appears authentic",
-          "No suspicious modifications detected",
-          "Face similarity is within acceptable range",
-          "Extracted text is consistent",
-        ],
-        extractedData: {
-          documentType: "Identity Document",
-          name: "Sample User",
-          dateOfBirth: "XX/XX/XXXX",
-          documentNumber: "XXXX-XXXX-XXXX",
-          issuingAuthority: "Government Authority",
-        },
+        score: 94,
+        message:
+          "Document passed initial AI-based authenticity screening.",
       });
-
-      setScreening(false);
     }, 2000);
   };
 
-  const getStatusClass = (status) => {
-    if (status === "Verified") {
-      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-    }
-
-    if (status === "Suspicious") {
-      return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
-    }
-
-    return "bg-red-500/10 text-red-400 border-red-500/20";
-  };
-
-  const getRiskClass = (risk) => {
-    if (risk === "Low") return "text-emerald-400";
-    if (risk === "Medium") return "text-yellow-400";
-    return "text-red-400";
+  const removeFile = () => {
+    setSelectedFile(null);
+    setScanResult(null);
+    setError("");
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
+      {/* Header */}
+      <header className="border-b border-slate-800 bg-slate-900/90">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              AI Identity Screening
+            </h1>
 
-      {/* HEADER */}
-      <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-
-          <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xl shadow-lg shadow-blue-600/20">
-              🛡️
-            </div>
-
-            <div>
-              <h1 className="text-lg font-bold">
-                AI Identity Screening
-              </h1>
-
-              <p className="text-xs text-slate-500">
-                Fake Identity & Documents Detection System
-              </p>
-            </div>
+            <p className="mt-1 text-sm text-slate-400">
+              Fake Identity & Documents Detection System
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-slate-400 sm:block">
-              AI Engine v1.0
-            </div>
-
-            <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-xs font-medium text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              System Online
-            </div>
+          <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400">
+            <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+            System Online
           </div>
-
         </div>
       </header>
 
-      {/* MAIN */}
+      {/* Main */}
       <main className="mx-auto max-w-7xl px-6 py-8">
-
-        {/* HERO */}
         <div className="mb-8">
-          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <p className="text-sm font-medium text-blue-400">
+            AI DOCUMENT ANALYSIS
+          </p>
 
-            <div>
-              <p className="mb-2 text-sm font-medium text-blue-400">
-                SECURITY OPERATIONS CENTER
-              </p>
+          <h2 className="mt-1 text-3xl font-bold">
+            Screening Dashboard
+          </h2>
 
-              <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
-                Screening Dashboard
-              </h2>
-
-              <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                AI-powered identity verification, document authenticity
-                analysis and fraud detection.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-3">
-              <p className="text-xs text-slate-500">
-                Detection Accuracy
-              </p>
-
-              <p className="mt-1 text-xl font-bold text-blue-400">
-                96.8%
-              </p>
-            </div>
-
-          </div>
+          <p className="mt-2 text-slate-400">
+            Upload and analyze identity documents using AI-powered
+            screening.
+          </p>
         </div>
 
-        {/* STATS */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Stats */}
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-lg">
+            <p className="text-sm text-slate-400">
+              Documents Screened
+            </p>
 
-          <div className="group rounded-2xl border border-slate-800 bg-slate-900 p-5 transition hover:-translate-y-1 hover:border-blue-500/40">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-400">
-                Documents Screened
-              </span>
-
-              <span className="rounded-lg bg-blue-500/10 p-2">
-                📄
-              </span>
-            </div>
-
-            <h3 className="mt-4 text-3xl font-bold">
+            <h3 className="mt-2 text-3xl font-bold">
               1,248
             </h3>
 
             <p className="mt-2 text-xs text-slate-500">
-              Total documents processed
+              Total processed
             </p>
           </div>
 
-          <div className="group rounded-2xl border border-emerald-500/10 bg-slate-900 p-5 transition hover:-translate-y-1 hover:border-emerald-500/40">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-400">
-                Verified
-              </span>
+          <div className="rounded-2xl border border-emerald-500/10 bg-slate-900 p-5 shadow-lg">
+            <p className="text-sm text-slate-400">
+              Verified
+            </p>
 
-              <span className="rounded-lg bg-emerald-500/10 p-2">
-                ✓
-              </span>
-            </div>
-
-            <h3 className="mt-4 text-3xl font-bold text-emerald-400">
+            <h3 className="mt-2 text-3xl font-bold text-emerald-400">
               1,086
             </h3>
 
-            <p className="mt-2 text-xs text-emerald-500">
+            <p className="mt-2 text-xs text-emerald-400/70">
               87.0% verification rate
             </p>
           </div>
 
-          <div className="group rounded-2xl border border-yellow-500/10 bg-slate-900 p-5 transition hover:-translate-y-1 hover:border-yellow-500/40">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-400">
-                Suspicious
-              </span>
+          <div className="rounded-2xl border border-yellow-500/10 bg-slate-900 p-5 shadow-lg">
+            <p className="text-sm text-slate-400">
+              Suspicious
+            </p>
 
-              <span className="rounded-lg bg-yellow-500/10 p-2">
-                ⚠
-              </span>
-            </div>
-
-            <h3 className="mt-4 text-3xl font-bold text-yellow-400">
+            <h3 className="mt-2 text-3xl font-bold text-yellow-400">
               117
             </h3>
 
-            <p className="mt-2 text-xs text-yellow-500">
-              Requires investigation
+            <p className="mt-2 text-xs text-yellow-400/70">
+              Requires review
             </p>
           </div>
 
-          <div className="group rounded-2xl border border-red-500/10 bg-slate-900 p-5 transition hover:-translate-y-1 hover:border-red-500/40">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-400">
-                Fake Detected
-              </span>
+          <div className="rounded-2xl border border-red-500/10 bg-slate-900 p-5 shadow-lg">
+            <p className="text-sm text-slate-400">
+              Fake Detected
+            </p>
 
-              <span className="rounded-lg bg-red-500/10 p-2">
-                ✕
-              </span>
-            </div>
-
-            <h3 className="mt-4 text-3xl font-bold text-red-400">
+            <h3 className="mt-2 text-3xl font-bold text-red-400">
               45
             </h3>
 
-            <p className="mt-2 text-xs text-red-500">
-              Fraudulent documents
+            <p className="mt-2 text-xs text-red-400/70">
+              Potential fraud
+            </p>
+          </div>
+        </div>
+
+        {/* Upload Section */}
+        <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+          <div>
+            <h3 className="text-xl font-semibold">
+              Upload Identity Document
+            </h3>
+
+            <p className="mt-1 text-sm text-slate-400">
+              Upload a document to start AI-powered authenticity
+              screening.
             </p>
           </div>
 
-        </div>
+          {/* Drop Zone */}
+          <label
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+            className={`mt-6 flex min-h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition ${
+              isDragging
+                ? "border-blue-400 bg-blue-500/10"
+                : "border-slate-700 bg-slate-950/40 hover:border-blue-500/60 hover:bg-slate-950/70"
+            }`}
+          >
+            <input
+              type="file"
+              accept=".jpg,.jpeg,.png,.pdf"
+              onChange={handleFileChange}
+              className="hidden"
+            />
 
-        {/* UPLOAD + ANALYSIS */}
-        <div className="mt-8 grid gap-6 lg:grid-cols-5">
-
-          {/* UPLOAD */}
-          <div className="lg:col-span-3 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold">
-                  Document Screening
-                </h3>
-
-                <p className="mt-1 text-sm text-slate-500">
-                  Upload an identity document for AI analysis.
-                </p>
-              </div>
-
-              <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs text-blue-400">
-                AI Ready
-              </span>
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 text-3xl">
+              📄
             </div>
 
-            {!file ? (
-              <label
-                htmlFor="document-upload"
-                className="mt-6 flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-700 bg-slate-950/60 p-8 text-center transition hover:border-blue-500 hover:bg-blue-500/5"
-              >
+            <p className="text-lg font-medium text-slate-200">
+              {isDragging
+                ? "Drop your document here"
+                : "Drag & drop your document here"}
+            </p>
 
-                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-500/10 text-4xl">
-                  📁
+            <p className="mt-2 text-sm text-slate-500">
+              or click to browse from your computer
+            </p>
+
+            <p className="mt-4 text-xs text-slate-600">
+              JPG, PNG, PDF • Maximum size 10 MB
+            </p>
+          </label>
+
+          {/* Error */}
+          {error && (
+            <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              ⚠ {error}
+            </div>
+          )}
+
+          {/* Selected File */}
+          {selectedFile && (
+            <div className="mt-5 rounded-xl border border-slate-700 bg-slate-950/70 p-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-xl">
+                    📎
+                  </div>
+
+                  <div>
+                    <p className="max-w-xs truncate font-medium text-slate-200">
+                      {selectedFile.name}
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
                 </div>
 
-                <h4 className="mt-5 text-lg font-semibold">
-                  Upload Identity Document
-                </h4>
+                <button
+                  onClick={removeFile}
+                  className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-400 transition hover:border-red-500/40 hover:text-red-400"
+                >
+                  Remove
+                </button>
+              </div>
 
-                <p className="mt-2 max-w-md text-sm text-slate-500">
-                  Drag and drop your document here or click to browse files.
-                </p>
+              {/* Scan Button */}
+              <button
+                onClick={startScreening}
+                disabled={isScanning}
+                className="mt-5 w-full rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isScanning
+                  ? "AI Screening in Progress..."
+                  : "Start AI Screening"}
+              </button>
+            </div>
+          )}
 
-                <p className="mt-3 text-xs text-slate-600">
-                  JPG • JPEG • PNG • PDF • Maximum 10MB
-                </p>
-
-                <span className="mt-6 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold transition hover:bg-blue-500">
-                  Choose Document
+          {/* Scanning */}
+          {isScanning && (
+            <div className="mt-5 rounded-xl border border-blue-500/20 bg-blue-500/5 p-5">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-blue-300">
+                  Analyzing document...
                 </span>
 
-                <input
-                  ref={fileInputRef}
-                  id="document-upload"
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.pdf"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-
-              </label>
-            ) : (
-              <div className="mt-6">
-
-                <div className="overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
-
-                  <div className="flex flex-col md:flex-row">
-
-                    {/* PREVIEW */}
-                    <div className="flex h-64 w-full items-center justify-center bg-slate-900 md:w-64">
-
-                      {preview ? (
-                        <img
-                          src={preview}
-                          alt="Document preview"
-                          className="h-full w-full object-contain"
-                        />
-                      ) : (
-                        <div className="text-center">
-                          <div className="text-6xl">
-                            📑
-                          </div>
-
-                          <p className="mt-3 text-sm text-slate-400">
-                            PDF Document
-                          </p>
-                        </div>
-                      )}
-
-                    </div>
-
-                    {/* DETAILS */}
-                    <div className="flex-1 p-6">
-
-                      <div className="flex items-start justify-between gap-4">
-
-                        <div className="min-w-0">
-                          <p className="truncate text-lg font-semibold">
-                            {file.name}
-                          </p>
-
-                          <p className="mt-1 text-xs text-slate-500">
-                            {(file.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-
-                        <button
-                          onClick={removeFile}
-                          className="rounded-lg px-3 py-2 text-xs text-red-400 hover:bg-red-500/10"
-                        >
-                          Remove
-                        </button>
-
-                      </div>
-
-                      <div className="mt-5 grid grid-cols-3 gap-3">
-
-                        <div className="rounded-xl bg-slate-900 p-3">
-                          <p className="text-[10px] uppercase text-slate-600">
-                            Type
-                          </p>
-
-                          <p className="mt-1 truncate text-xs text-slate-300">
-                            {file.type || "Document"}
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl bg-slate-900 p-3">
-                          <p className="text-[10px] uppercase text-slate-600">
-                            Status
-                          </p>
-
-                          <p className="mt-1 text-xs text-emerald-400">
-                            Ready
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl bg-slate-900 p-3">
-                          <p className="text-[10px] uppercase text-slate-600">
-                            Security
-                          </p>
-
-                          <p className="mt-1 text-xs text-blue-400">
-                            Scannable
-                          </p>
-                        </div>
-
-                      </div>
-
-                      <button
-                        onClick={handleScreening}
-                        disabled={screening}
-                        className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {screening ? (
-                          <>
-                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                            AI Screening in Progress...
-                          </>
-                        ) : (
-                          <>
-                            🔍 Start AI Screening
-                          </>
-                        )}
-                      </button>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-            )}
-
-          </div>
-
-          {/* AI ENGINE */}
-          <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10">
-                🤖
+                <span className="text-blue-400">
+                  AI
+                </span>
               </div>
 
-              <div>
-                <h3 className="font-semibold">
-                  AI Analysis Engine
-                </h3>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
+                <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
+              </div>
 
-                <p className="text-xs text-slate-500">
-                  Multi-layer verification
-                </p>
+              <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
+                <span>✓ OCR Analysis</span>
+                <span>✓ Identity Check</span>
+                <span>◌ Fraud Detection</span>
               </div>
             </div>
+          )}
 
-            <div className="mt-6 space-y-4">
-
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                <div className="flex justify-between">
-                  <span className="text-sm text-slate-400">
-                    Face Matching
-                  </span>
-                  <span className="text-sm font-semibold text-emerald-400">
-                    98%
-                  </span>
-                </div>
-
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-                  <div className="h-full w-[98%] rounded-full bg-emerald-500" />
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                <div className="flex justify-between">
-                  <span className="text-sm text-slate-400">
-                    Document Authenticity
-                  </span>
-                  <span className="text-sm font-semibold text-blue-400">
-                    96%
-                  </span>
-                </div>
-
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-                  <div className="h-full w-[96%] rounded-full bg-blue-500" />
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                <div className="flex justify-between">
-                  <span className="text-sm text-slate-400">
-                    OCR Accuracy
-                  </span>
-                  <span className="text-sm font-semibold text-purple-400">
-                    97%
-                  </span>
-                </div>
-
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-                  <div className="h-full w-[97%] rounded-full bg-purple-500" />
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-400">
-                    Tampering Detection
-                  </span>
-
-                  <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs text-emerald-400">
-                    Active
-                  </span>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* RESULT */}
-        {result && (
-          <div className="mt-8 rounded-2xl border border-emerald-500/20 bg-slate-900 p-6">
-
-            <div className="flex flex-col justify-between gap-5 md:flex-row md:items-center">
-
-              <div className="flex items-center gap-4">
-
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl">
-                  ✓
-                </div>
-
+          {/* Result */}
+          {scanResult && !isScanning && (
+            <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-emerald-400">
-                    Screening Complete
+                  <p className="text-sm text-slate-400">
+                    Screening Result
                   </p>
 
-                  <h3 className="mt-1 text-2xl font-bold">
-                    {result.status}
-                  </h3>
+                  <h4 className="mt-1 text-2xl font-bold text-emerald-400">
+                    ✓ {scanResult.status}
+                  </h4>
 
-                  <p className="text-sm text-slate-500">
-                    {result.document}
+                  <p className="mt-2 max-w-xl text-sm text-slate-400">
+                    {scanResult.message}
                   </p>
                 </div>
 
-              </div>
+                <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full border-4 border-emerald-500/30">
+                  <span className="text-2xl font-bold text-emerald-400">
+                    {scanResult.score}%
+                  </span>
 
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-6 py-4 text-center">
-                <p className="text-xs text-slate-500">
-                  Confidence Score
-                </p>
-
-                <p className="mt-1 text-3xl font-bold text-emerald-400">
-                  {result.confidence}%
-                </p>
-              </div>
-
-            </div>
-
-            {/* RESULT METRICS */}
-            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-              <div className="rounded-xl bg-slate-950 p-4">
-                <p className="text-xs text-slate-500">
-                  Face Match
-                </p>
-
-                <p className="mt-2 text-2xl font-bold text-emerald-400">
-                  {result.faceMatch}%
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-950 p-4">
-                <p className="text-xs text-slate-500">
-                  Authenticity
-                </p>
-
-                <p className="mt-2 text-2xl font-bold text-blue-400">
-                  {result.authenticity}%
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-950 p-4">
-                <p className="text-xs text-slate-500">
-                  OCR Accuracy
-                </p>
-
-                <p className="mt-2 text-2xl font-bold text-purple-400">
-                  {result.ocrAccuracy}%
-                </p>
-              </div>
-
-              <div className="rounded-xl bg-slate-950 p-4">
-                <p className="text-xs text-slate-500">
-                  Risk Score
-                </p>
-
-                <p className="mt-2 text-2xl font-bold text-emerald-400">
-                  {result.riskScore}/100
-                </p>
-              </div>
-
-            </div>
-
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-
-              {/* INDICATORS */}
-              <div>
-                <h4 className="font-semibold">
-                  AI Verification Indicators
-                </h4>
-
-                <div className="mt-3 space-y-2">
-                  {result.indicators.map((indicator, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 rounded-lg bg-slate-950 px-4 py-3 text-sm text-slate-300"
-                    >
-                      <span className="text-emerald-400">
-                        ✓
-                      </span>
-
-                      {indicator}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* EXTRACTED DATA */}
-              <div>
-                <h4 className="font-semibold">
-                  Extracted Document Data
-                </h4>
-
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-
-                  <div className="rounded-lg bg-slate-950 p-3">
-                    <p className="text-[10px] uppercase text-slate-600">
-                      Document Type
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-300">
-                      {result.extractedData.documentType}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg bg-slate-950 p-3">
-                    <p className="text-[10px] uppercase text-slate-600">
-                      Name
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-300">
-                      {result.extractedData.name}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg bg-slate-950 p-3">
-                    <p className="text-[10px] uppercase text-slate-600">
-                      Date of Birth
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-300">
-                      {result.extractedData.dateOfBirth}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg bg-slate-950 p-3">
-                    <p className="text-[10px] uppercase text-slate-600">
-                      Document Number
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-300">
-                      {result.extractedData.documentNumber}
-                    </p>
-                  </div>
-
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        )}
-
-        {/* HISTORY */}
-        <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-
-            <div>
-              <h3 className="text-xl font-semibold">
-                Screening History
-              </h3>
-
-              <p className="mt-1 text-sm text-slate-500">
-                Track recently analyzed identity documents.
-              </p>
-            </div>
-
-            <div className="rounded-lg bg-blue-500/10 px-4 py-2 text-xs text-blue-400">
-              {history.length} Total Screenings
-            </div>
-
-          </div>
-
-          {/* SEARCH */}
-          <div className="mt-6 flex flex-col gap-3 md:flex-row">
-
-            <div className="relative flex-1">
-
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600">
-                🔍
-              </span>
-
-              <input
-                type="text"
-                placeholder="Search document or screening ID..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-xl border border-slate-800 bg-slate-950 py-3 pl-11 pr-4 text-sm text-white outline-none transition focus:border-blue-500"
-              />
-
-            </div>
-
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-blue-500"
-            >
-              <option value="All">All Status</option>
-              <option value="Verified">Verified</option>
-              <option value="Suspicious">Suspicious</option>
-              <option value="Fake Detected">Fake Detected</option>
-            </select>
-
-          </div>
-
-          {/* TABLE */}
-          <div className="mt-6 overflow-x-auto">
-
-            <table className="w-full min-w-[750px] text-left">
-
-              <thead>
-                <tr className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-600">
-
-                  <th className="px-4 py-4">
-                    Screening ID
-                  </th>
-
-                  <th className="px-4 py-4">
-                    Document
-                  </th>
-
-                  <th className="px-4 py-4">
-                    Status
-                  </th>
-
-                  <th className="px-4 py-4">
+                  <span className="text-[10px] uppercase text-slate-500">
                     Confidence
-                  </th>
-
-                  <th className="px-4 py-4">
-                    Risk
-                  </th>
-
-                  <th className="px-4 py-4">
-                    Time
-                  </th>
-
-                </tr>
-              </thead>
-
-              <tbody>
-
-                {filteredHistory.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-slate-800/60 transition hover:bg-slate-950"
-                  >
-
-                    <td className="px-4 py-4 font-mono text-sm text-blue-400">
-                      {item.id}
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800">
-                          📄
-                        </div>
-
-                        <span className="max-w-[180px] truncate text-sm text-slate-300">
-                          {item.document}
-                        </span>
-
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <span
-                        className={`rounded-full border px-3 py-1 text-xs font-medium ${getStatusClass(
-                          item.status
-                        )}`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-4">
-
-                      <div className="flex items-center gap-3">
-
-                        <div className="h-2 w-20 overflow-hidden rounded-full bg-slate-800">
-                          <div
-                            className="h-full rounded-full bg-blue-500"
-                            style={{
-                              width: `${item.confidence}%`,
-                            }}
-                          />
-                        </div>
-
-                        <span className="text-sm text-slate-300">
-                          {item.confidence}%
-                        </span>
-
-                      </div>
-
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <span
-                        className={`text-sm font-medium ${getRiskClass(
-                          item.risk
-                        )}`}
-                      >
-                        {item.risk}
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-4 text-sm text-slate-600">
-                      {item.time}
-                    </td>
-
-                  </tr>
-                ))}
-
-              </tbody>
-
-            </table>
-
-            {filteredHistory.length === 0 && (
-              <div className="py-14 text-center">
-
-                <div className="text-4xl">
-                  🔎
+                  </span>
                 </div>
-
-                <p className="mt-3 text-sm text-slate-400">
-                  No screenings found
-                </p>
-
-                <p className="mt-1 text-xs text-slate-600">
-                  Try changing your search or filter.
-                </p>
-
               </div>
-            )}
+            </div>
+          )}
+        </section>
 
+        {/* Security Features */}
+        <section className="mt-8 grid gap-5 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <div className="text-2xl">🔍</div>
+
+            <h3 className="mt-3 font-semibold">
+              Document Analysis
+            </h3>
+
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              AI checks document structure, text and visual patterns.
+            </p>
           </div>
 
-        </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <div className="text-2xl">🛡️</div>
 
-        {/* FOOTER */}
-        <div className="py-8 text-center text-xs text-slate-700">
-          AI Identity Screening System • Secure Document Analysis Platform
-        </div>
+            <h3 className="mt-3 font-semibold">
+              Fraud Detection
+            </h3>
 
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Suspicious documents can be flagged for further review.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+            <div className="text-2xl">🤖</div>
+
+            <h3 className="mt-3 font-semibold">
+              AI Confidence
+            </h3>
+
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Screening results include an AI confidence score.
+            </p>
+          </div>
+        </section>
       </main>
     </div>
   );
