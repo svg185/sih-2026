@@ -219,11 +219,155 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
 
+    {/* =====================================
+    SIDEBAR NAVIGATION
+===================================== */}
+
+<aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 border-r border-slate-800 bg-slate-900 lg:block">
+
+  {/* LOGO */}
+
+  <div className="border-b border-slate-800 p-6">
+
+    <div className="flex items-center gap-3">
+
+      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xl shadow-lg shadow-blue-500/20">
+        🛡️
+      </div>
+
+      <div>
+        <h2 className="font-bold text-white">
+          AI Shield
+        </h2>
+
+        <p className="text-xs text-slate-500">
+          Identity Security
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  {/* NAVIGATION */}
+
+  <nav className="p-4">
+
+    <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+      Main Menu
+    </p>
+
+    <div className="space-y-1">
+
+      {/* Dashboard */}
+
+      <button
+        className="flex w-full items-center gap-3 rounded-xl bg-blue-600/10 px-3 py-3 text-left text-sm font-medium text-blue-400"
+      >
+        <span className="text-lg">🏠</span>
+        <span>Dashboard</span>
+      </button>
+
+      {/* Upload */}
+
+      <button
+        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
+      >
+        <span className="text-lg">📤</span>
+        <span>Document Upload</span>
+      </button>
+
+      {/* Verification */}
+
+      <button
+        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
+      >
+        <span className="text-lg">✅</span>
+        <span>Verification</span>
+      </button>
+
+      {/* Risk */}
+
+      <button
+        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
+      >
+        <span className="text-lg">📊</span>
+        <span>Risk Dashboard</span>
+      </button>
+
+      {/* Forensic */}
+
+      <button
+        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
+      >
+        <span className="text-lg">🔬</span>
+        <span>Forensic Analysis</span>
+      </button>
+
+      {/* Investigation */}
+
+      <button
+        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
+      >
+        <span className="text-lg">🕵️</span>
+        <span>Investigation</span>
+      </button>
+
+    </div>
+
+    {/* SYSTEM */}
+
+    <p className="mb-3 mt-8 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+      System
+    </p>
+
+    <div className="space-y-1">
+
+      <button className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white">
+        <span className="text-lg">⚙️</span>
+        <span>Settings</span>
+      </button>
+
+      <button className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white">
+        <span className="text-lg">📖</span>
+        <span>Audit Logs</span>
+      </button>
+
+    </div>
+
+  </nav>
+
+  {/* SYSTEM STATUS */}
+
+  <div className="absolute bottom-0 left-0 right-0 border-t border-slate-800 p-4">
+
+    <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4">
+
+      <div className="flex items-center gap-2">
+
+        <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+
+        <span className="text-xs font-medium text-emerald-400">
+          All Systems Operational
+        </span>
+
+      </div>
+
+      <p className="mt-2 text-[10px] text-slate-600">
+        AI Engine • OCR • Face Verification
+      </p>
+
+    </div>
+
+  </div>
+
+</aside>
+
       {/* =====================================
           HEADER
       ===================================== */}
 
-      <header className="border-b border-slate-800 bg-slate-900/90">
+      <header className="border-b border-slate-800 bg-slate-900/90 lg:ml-64">
 
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
 
@@ -253,7 +397,7 @@ function App() {
           MAIN
       ===================================== */}
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-6 py-8 lg:ml-64">
 
         {/* =====================================
             PAGE TITLE
