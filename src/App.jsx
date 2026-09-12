@@ -834,6 +834,286 @@ function App() {
 
             </div>
 
+            {/* =====================================
+    FORENSIC HEATMAP
+===================================== */}
+
+<div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+
+  {/* HEADER */}
+
+  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+    <div>
+      <p className="text-sm font-medium text-blue-400">
+        FORENSIC VISUALIZATION
+      </p>
+
+      <h3 className="mt-1 text-xl font-semibold">
+        Document Tampering Analysis
+      </h3>
+
+      <p className="mt-1 text-sm text-slate-500">
+        AI-based analysis of suspicious document regions.
+      </p>
+    </div>
+
+    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-400">
+      ● Analysis Complete
+    </div>
+
+  </div>
+
+  {/* FORENSIC AREA */}
+
+  <div className="mt-6 grid gap-6 lg:grid-cols-2">
+
+    {/* DOCUMENT PREVIEW */}
+
+    <div>
+
+      <p className="mb-3 text-sm font-medium text-slate-400">
+        DOCUMENT ANALYSIS VIEW
+      </p>
+
+      <div className="relative flex min-h-[360px] items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
+
+        {/* Fake document */}
+
+        <div className="relative h-[280px] w-[420px] max-w-[90%] rounded-xl border border-slate-600 bg-slate-800 p-5 shadow-2xl">
+
+          {/* Document Header */}
+
+          <div className="flex items-center gap-3 border-b border-slate-700 pb-4">
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20 text-xl">
+              🇮🇳
+            </div>
+
+            <div>
+
+              <div className="h-2 w-32 rounded bg-slate-500"></div>
+
+              <div className="mt-2 h-1.5 w-24 rounded bg-slate-700"></div>
+
+            </div>
+
+          </div>
+
+          {/* Photo */}
+
+          <div className="absolute left-5 top-24 flex h-24 w-20 items-center justify-center rounded-lg border border-slate-600 bg-slate-700 text-3xl">
+            👤
+          </div>
+
+          {/* Text */}
+
+          <div className="absolute left-32 top-24 space-y-3">
+
+            <div className="h-2 w-36 rounded bg-slate-600"></div>
+
+            <div className="h-2 w-28 rounded bg-slate-700"></div>
+
+            <div className="h-2 w-32 rounded bg-slate-700"></div>
+
+            <div className="h-2 w-24 rounded bg-slate-700"></div>
+
+          </div>
+
+          {/* Document Number */}
+
+          <div className="absolute bottom-12 left-5">
+
+            <div className="h-2 w-44 rounded bg-slate-600"></div>
+
+          </div>
+
+          {/* HEATMAP MARKERS */}
+
+          <div className="absolute left-[35%] top-[38%] h-14 w-20 rounded-lg border-2 border-emerald-400/70 bg-emerald-400/10 shadow-[0_0_25px_rgba(52,211,153,0.25)]">
+          </div>
+
+          <div className="absolute right-[12%] top-[55%] h-12 w-16 rounded-lg border-2 border-yellow-400/80 bg-yellow-400/10 shadow-[0_0_25px_rgba(250,204,21,0.25)]">
+          </div>
+
+          <div className="absolute left-[45%] bottom-[15%] h-10 w-24 rounded-lg border-2 border-red-400/90 bg-red-400/20 shadow-[0_0_30px_rgba(248,113,113,0.35)]">
+          </div>
+
+        </div>
+
+        {/* HEATMAP LABEL */}
+
+        <div className="absolute bottom-4 left-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+          ⚠ Potential alteration region
+        </div>
+
+      </div>
+
+      {/* LEGEND */}
+
+      <div className="mt-4 flex flex-wrap gap-4 text-xs">
+
+        <div className="flex items-center gap-2 text-slate-400">
+          <span className="h-3 w-3 rounded-full bg-emerald-400"></span>
+          Authentic
+        </div>
+
+        <div className="flex items-center gap-2 text-slate-400">
+          <span className="h-3 w-3 rounded-full bg-yellow-400"></span>
+          Review
+        </div>
+
+        <div className="flex items-center gap-2 text-slate-400">
+          <span className="h-3 w-3 rounded-full bg-red-400"></span>
+          Suspicious
+        </div>
+
+      </div>
+
+    </div>
+
+    {/* FORENSIC FINDINGS */}
+
+    <div>
+
+      <p className="mb-3 text-sm font-medium text-slate-400">
+        FORENSIC FINDINGS
+      </p>
+
+      <div className="space-y-3">
+
+        {/* Finding 1 */}
+
+        <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4">
+
+          <div className="flex items-center justify-between">
+
+            <span className="text-sm font-medium text-slate-200">
+              Document Structure
+            </span>
+
+            <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-400">
+              PASS
+            </span>
+
+          </div>
+
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            Document layout and structural patterns are consistent
+            with the expected format.
+          </p>
+
+        </div>
+
+        {/* Finding 2 */}
+
+        <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4">
+
+          <div className="flex items-center justify-between">
+
+            <span className="text-sm font-medium text-slate-200">
+              Font Consistency
+            </span>
+
+            <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-400">
+              PASS
+            </span>
+
+          </div>
+
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            Font characteristics remain consistent across detected
+            text regions.
+          </p>
+
+        </div>
+
+        {/* Finding 3 */}
+
+        <div className="rounded-xl border border-yellow-500/10 bg-yellow-500/5 p-4">
+
+          <div className="flex items-center justify-between">
+
+            <span className="text-sm font-medium text-slate-200">
+              Pixel Anomaly
+            </span>
+
+            <span className="rounded-full bg-yellow-500/10 px-2.5 py-1 text-xs text-yellow-400">
+              REVIEW
+            </span>
+
+          </div>
+
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            Minor pixel-level inconsistencies detected in one
+            document region.
+          </p>
+
+        </div>
+
+        {/* Finding 4 */}
+
+        <div className="rounded-xl border border-red-500/10 bg-red-500/5 p-4">
+
+          <div className="flex items-center justify-between">
+
+            <span className="text-sm font-medium text-slate-200">
+              Manipulation Indicator
+            </span>
+
+            <span className="rounded-full bg-red-500/10 px-2.5 py-1 text-xs text-red-400">
+              LOW
+            </span>
+
+          </div>
+
+          <p className="mt-2 text-xs leading-5 text-slate-500">
+            Low probability of digital alteration detected by the
+            forensic analysis layer.
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* FORENSIC SUMMARY */}
+
+      <div className="mt-5 rounded-xl border border-slate-700 bg-slate-950/60 p-5">
+
+        <div className="flex items-center justify-between">
+
+          <span className="text-sm text-slate-400">
+            Forensic Confidence
+          </span>
+
+          <span className="text-xl font-bold text-emerald-400">
+            96%
+          </span>
+
+        </div>
+
+        <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
+
+          <div
+            className="h-full rounded-full bg-emerald-500"
+            style={{ width: "96%" }}
+          ></div>
+
+        </div>
+
+        <p className="mt-3 text-xs leading-5 text-slate-600">
+          Overall forensic analysis indicates a low probability
+          of document manipulation.
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
             {/* =================================
                 EXTRACTED DATA + ANOMALIES
             ================================= */}
