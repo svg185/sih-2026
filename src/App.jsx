@@ -300,7 +300,11 @@ function App() {
           {activePage === "Risk Dashboard" && <RiskDashboard />}
 
           {activePage === "Forensic Analysis" && (
-            <ForensicPage scanResult={scanResult} />
+            <ForensicAnalysisPage
+              scanResult={scanResult}
+              setActivePage={navigate}
+              selectedFile={selectedFile}
+            />
           )}
 
           {activePage === "Investigation" && (
@@ -1699,143 +1703,406 @@ function RiskDashboard() {
    FORENSIC
 ========================= */
 
-function ForensicPage({ scanResult }) {
-  const result = scanResult || {
-    forensic: {
-      documentIntegrity: 96,
-      ocrAccuracy: 98,
-      faceMatch: 94,
-      liveness: 97,
-      tampering: 8,
-      riskScore: 12,
-    },
+function ForensicAnalysisPage({ scanResult, setActivePage, selectedFile }) {
+  // Demo values are used only until the real AI/backend response is available.
+  // When scanResult.forensic exists, those real values automatically take priority.
+  const forensic = {
+    documentIntegrity: 96,
+    ocrAccuracy: 98,
+    faceMatch: 94,
+    liveness: 97,
+    tampering: 8,
+    riskScore: 12,
+    ...(scanResult?.forensic || {}),
   };
+
+  const demoMode = !scanResult?.forensic;
+
+  const findings = [
+    {
+      title: "Document Structure",
+      description: "Document layout and structural patterns are consistent with the expected format.",
+      score: forensic.documentIntegrity,
+      status: forensic.documentIntegrity >= 90 ? "Passed" : "Review",
+      icon: FileCheck2,
+    },
+    {
+      title: "OCR Consistency",
+      description: "Extracted text shows high confidence with no significant character anomalies.",
+      score: forensic.ocrAccuracy,
+      status: forensic.ocrAccuracy >= 90 ? "Passed" : "Review",
+      icon: FileSearch,
+    },
+    {
+      title: "Face Match",
+      description: "Detected face region is compared against the identity image during biometric verification.",
+      score: forensic.faceMatch,
+      status: forensic.faceMatch >= 90 ? "Matched" : "Review",
+      icon: Fingerprint,
+    },
+    {
+      title: "Liveness Detection",
+      description: "Biometric liveness indicators are evaluated to identify presentation attacks.",
+      score: forensic.liveness,
+      status: forensic.liveness >= 90 ? "Passed" : "Review",
+      icon: UserRound,
+    },
+  ];
+
+  const anomalyData = [
+    { name: "Image Tampering", value: forensic.tampering },
+    { name: "Text Anomaly", value: 6 },
+    { name: "Image Region", value: 8 },
+    { name: "Metadata", value: 4 },
+  ];
+
+  const anomalies = scanResult?.anomalies || [
+    "No visible document alteration detected",
+    "OCR text structure is consistent",
+    "Face region matches identity photo",
+  ];
+
+  const riskLabel =
+    forensic.riskScore <= 20
+      ? "LOW RISK"
+      : forensic.riskScore <= 50
+      ? "MEDIUM RISK"
+      : "HIGH RISK";
+
+  const riskTone =
+    forensic.riskScore <= 20
+      ? "text-emerald-300 border-emerald-400/20 bg-emerald-400/5"
+      : forensic.riskScore <= 50
+      ? "text-amber-300 border-amber-400/20 bg-amber-400/5"
+      : "text-red-300 border-red-400/20 bg-red-400/5";
 
   return (
     <div className="mx-auto max-w-7xl space-y-7">
       <PageHeading
-        eyebrow="FORENSIC INTELLIGENCE"
+        eyebrow="AI FORENSIC ENGINE"
         title="Forensic Analysis"
-        description="Inspect document integrity, tampering signals and biometric confidence."
+        description="Analyze document integrity, OCR consistency, biometric signals and potential manipulation indicators."
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            {demoMode && (
+              <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-[9px] font-bold tracking-wider text-amber-300">
+                DEMO DATA
+              </span>
+            )}
+            <span className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-[9px] font-bold tracking-wider text-emerald-300">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+              ENGINE OPERATIONAL
+            </span>
+          </div>
+        }
       />
 
+      {/* SCORE CARDS */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          icon={FileCheck2}
-          title="Document Integrity"
-          value={result.forensic.documentIntegrity}
-          suffix="%"
-        />
-
-        <MetricCard
-          icon={FileText}
-          title="OCR Accuracy"
-          value={result.forensic.ocrAccuracy}
-          suffix="%"
-        />
-
-        <MetricCard
-          icon={Fingerprint}
-          title="Face Match"
-          value={result.forensic.faceMatch}
-          suffix="%"
-        />
-
-        <MetricCard
-          icon={Activity}
-          title="Liveness"
-          value={result.forensic.liveness}
-          suffix="%"
-        />
+        <ForensicScoreCard title="Document Integrity" value={forensic.documentIntegrity} icon={ShieldCheck} description="Structural consistency" />
+        <ForensicScoreCard title="OCR Accuracy" value={forensic.ocrAccuracy} icon={FileText} description="Text extraction confidence" />
+        <ForensicScoreCard title="Face Match" value={forensic.faceMatch} icon={Fingerprint} description="Biometric similarity" />
+        <ForensicScoreCard title="Liveness" value={forensic.liveness} icon={Activity} description="Presentation attack check" />
       </div>
 
-      <Panel>
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="text-sm font-bold">Document Tampering Heatmap</p>
-            <p className="mt-1 text-xs text-slate-500">
-              AI-assisted visualization of suspicious document regions
-            </p>
+      {/* MAIN WORKSPACE */}
+      <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+        <Panel className="overflow-hidden">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">Document Forensic View</p>
+              <p className="mt-1 text-xs text-slate-500">Visual region analysis and anomaly mapping</p>
+            </div>
+            <span className="rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-[9px] font-bold tracking-wider text-cyan-300">
+              AI HEATMAP
+            </span>
           </div>
 
-          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1.5 text-[10px] font-bold text-emerald-300">
-            LOW TAMPERING
-          </span>
-        </div>
+          <div className="relative flex min-h-[430px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#020617] p-6">
+            <div
+              className="pointer-events-none absolute inset-0 opacity-20"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgba(34,211,238,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.12) 1px, transparent 1px)",
+                backgroundSize: "32px 32px",
+              }}
+            />
 
-        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#080d1d] p-5">
-          <div className="mx-auto max-w-3xl">
-            <div className="relative aspect-[1.6/1] overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-950">
-              <div className="absolute inset-4 rounded-lg border border-cyan-400/20" />
+            <div className="relative z-10 w-full max-w-[560px] overflow-hidden rounded-xl border border-white/20 bg-slate-100 shadow-[0_0_55px_rgba(34,211,238,.12)]">
+              <div className="scan-line absolute left-0 right-0 h-[2px] bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,1)]" />
 
-              <div className="absolute left-[9%] top-[12%] h-20 w-24 rounded-lg border border-cyan-400/20 bg-cyan-400/5" />
+              <div className="p-6 text-slate-800">
+                <div className="flex items-center justify-between border-b border-slate-300 pb-4">
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Identity Document</p>
+                    <p className="mt-1 text-xl font-black">DOCUMENT PREVIEW</p>
+                  </div>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-300">
+                    <UserRound size={30} className="text-slate-500" />
+                  </div>
+                </div>
 
-              <div className="absolute right-[10%] top-[12%] h-28 w-24 rounded-lg border border-amber-400/30 bg-amber-400/10 shadow-[0_0_35px_rgba(245,158,11,.12)]" />
+                <div className="mt-6 grid grid-cols-2 gap-5 text-sm">
+                  <div>
+                    <p className="text-[9px] uppercase text-slate-400">Name</p>
+                    <p className="mt-1 font-bold">{scanResult?.extractedData?.name || "SAMPLE USER"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase text-slate-400">Document No.</p>
+                    <p className="mt-1 font-mono font-bold">{scanResult?.extractedData?.documentNumber || "XXXX XXXX 4821"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase text-slate-400">Document Type</p>
+                    <p className="mt-1 font-bold">{scanResult?.extractedData?.documentType || "Aadhaar Card"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase text-slate-400">Status</p>
+                    <p className="mt-1 font-bold text-emerald-600">{scanResult?.status || "Verified"}</p>
+                  </div>
+                </div>
 
-              <div className="absolute bottom-[22%] left-[12%] h-3 w-[55%] rounded bg-white/10" />
-              <div className="absolute bottom-[14%] left-[12%] h-3 w-[42%] rounded bg-white/5" />
-
-              <div className="absolute right-[12%] bottom-[15%] h-14 w-14 rounded-full border border-red-400/30 bg-red-400/10 shadow-[0_0_30px_rgba(239,68,68,.15)]" />
-
-              <div className="absolute inset-x-0 top-1/2 border-t border-cyan-400/10" />
-              <div className="absolute inset-y-0 left-1/2 border-l border-cyan-400/10" />
-
-              <div className="absolute left-4 top-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[10px] text-slate-400 backdrop-blur">
-                DOCUMENT REGION ANALYSIS
+                <div className="mt-8 grid grid-cols-3 gap-3">
+                  <div className="h-12 rounded bg-slate-200" />
+                  <div className="h-12 rounded bg-slate-200" />
+                  <div className="h-12 rounded bg-slate-200" />
+                </div>
               </div>
+
+              <div className="absolute left-[8%] top-[27%] h-14 w-[42%] rounded-lg border-2 border-cyan-400/70 bg-cyan-400/10" />
+              <div className="absolute right-[8%] top-[17%] h-20 w-20 rounded-full border-2 border-emerald-400/70 bg-emerald-400/10" />
+              <div className="absolute left-[8%] bottom-[25%] h-12 w-[38%] rounded-lg border-2 border-blue-400/70 bg-blue-400/10" />
+              <div className="absolute right-[8%] bottom-[25%] h-12 w-[30%] rounded-lg border-2 border-amber-400/70 bg-amber-400/10" />
+            </div>
+
+            <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-4 rounded-xl border border-white/10 bg-slate-950/85 px-4 py-3 backdrop-blur-xl">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Heatmap Legend</span>
+              <HeatLegend label="Normal" type="normal" />
+              <HeatLegend label="Attention" type="attention" />
+              <HeatLegend label="Anomaly" type="danger" />
             </div>
           </div>
+        </Panel>
 
-          <div className="mx-auto mt-5 flex max-w-3xl flex-wrap items-center justify-center gap-5 text-[10px] text-slate-500">
-            <LegendDot color="bg-emerald-400" label="Authentic region" />
-            <LegendDot color="bg-amber-400" label="Review region" />
-            <LegendDot color="bg-red-400" label="High anomaly" />
+        {/* RISK */}
+        <div className="space-y-6">
+          <Panel>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold">Forensic Risk</p>
+                <p className="mt-1 text-xs text-slate-500">Combined anomaly assessment</p>
+              </div>
+              <Shield size={19} className="text-cyan-400" />
+            </div>
+
+            <div className="mt-7 flex justify-center">
+              <div
+                className="relative flex h-44 w-44 items-center justify-center rounded-full"
+                style={{
+                  background: `conic-gradient(#22d3ee ${Math.min(forensic.riskScore, 100) * 3.6}deg, rgba(255,255,255,.05) 0deg)`,
+                }}
+              >
+                <div className="flex h-36 w-36 flex-col items-center justify-center rounded-full bg-[#07101f]">
+                  <span className="text-4xl font-black text-white">{forensic.riskScore}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Risk / 100</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={`mt-6 rounded-xl border p-4 text-center ${riskTone}`}>
+              <p className="text-sm font-black">{riskLabel}</p>
+              <p className="mt-1 text-xs text-slate-400">
+                {forensic.riskScore <= 20 ? "No critical forensic indicators detected." : "Additional review is recommended."}
+              </p>
+            </div>
+          </Panel>
+
+          <Panel>
+            <p className="text-sm font-bold">Anomaly Distribution</p>
+            <p className="mt-1 text-xs text-slate-500">Signal intensity across forensic checks</p>
+
+            <div className="mt-6 space-y-4">
+              {anomalyData.map((item) => (
+                <div key={item.name}>
+                  <div className="mb-2 flex justify-between text-xs">
+                    <span className="text-slate-400">{item.name}</span>
+                    <span className="font-bold text-white">{item.value}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                      style={{ width: `${Math.min(item.value * 4, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Panel>
+        </div>
+      </div>
+
+      {/* FINDINGS */}
+      <div>
+        <div className="mb-4">
+          <p className="text-lg font-bold">Forensic Findings</p>
+          <p className="mt-1 text-xs text-slate-500">Individual AI analysis modules</p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {findings.map((finding) => (
+            <ForensicFindingCard key={finding.title} {...finding} />
+          ))}
+        </div>
+      </div>
+
+      {/* ANOMALIES */}
+      <Panel>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-bold">AI Anomaly Report</p>
+            <p className="mt-1 text-xs text-slate-500">Signals and observations generated during screening</p>
           </div>
+          <AlertTriangle size={19} className="text-amber-400" />
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {anomalies.map((item, index) => (
+            <div key={`${item}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10">
+                  <CheckCircle2 size={15} className="text-emerald-400" />
+                </div>
+                <p className="text-xs leading-5 text-slate-400">{item}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </Panel>
 
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Panel>
-          <p className="text-sm font-bold">Integrity Checks</p>
+      {/* ACTIONS */}
+      <div className="flex flex-wrap gap-3">
+        <button
+          onClick={() => setActivePage("Document Upload")}
+          className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-xs font-black text-slate-950 transition hover:bg-cyan-300"
+        >
+          <UploadCloud size={16} />
+          Analyze Another Document
+        </button>
 
-          <div className="mt-5 space-y-4">
-            <CheckRow title="Document structure" value="Passed" />
-            <CheckRow title="Text consistency" value="Passed" />
-            <CheckRow title="Image manipulation" value="Low" />
-            <CheckRow title="Metadata inspection" value="Passed" />
-            <CheckRow title="Security pattern analysis" value="Passed" />
+        <button
+          onClick={() => setActivePage("Verification")}
+          className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-bold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+        >
+          <ShieldCheck size={16} />
+          Open Verification
+        </button>
+      </div>
+
+      {selectedFile && (
+        <p className="text-[10px] text-slate-600">
+          Current file: {selectedFile.name}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ForensicScoreCard({
+  title,
+  value,
+  icon: Icon,
+  description,
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-cyan-400/20 hover:bg-white/[0.045]">
+      <div className="flex items-start justify-between">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-400/15 bg-cyan-400/10">
+          <Icon size={19} className="text-cyan-400" />
+        </div>
+
+        <div className="text-right">
+          <div className="text-2xl font-bold text-white">
+            {value}%
           </div>
-        </Panel>
-
-        <Panel>
-          <p className="text-sm font-bold">Forensic Summary</p>
-
-          <div className="mt-5 rounded-2xl border border-emerald-400/10 bg-emerald-400/[0.04] p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-400/10">
-                <ShieldCheck className="text-emerald-400" />
-              </div>
-
-              <div>
-                <p className="text-sm font-bold text-emerald-300">
-                  Document appears authentic
-                </p>
-
-                <p className="mt-1 text-xs text-slate-500">
-                  Overall forensic risk score:{" "}
-                  <span className="font-bold text-white">
-                    {result.forensic.riskScore}/100
-                  </span>
-                </p>
-              </div>
-            </div>
+          <div className="text-[10px] uppercase tracking-wider text-emerald-400">
+            Strong
           </div>
-        </Panel>
+        </div>
+      </div>
+
+      <h3 className="mt-5 text-sm font-semibold text-white">
+        {title}
+      </h3>
+
+      <p className="mt-1 text-xs text-slate-500">
+        {description}
+      </p>
+
+      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/5">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+          style={{ width: `${value}%` }}
+        />
       </div>
     </div>
   );
 }
 
+function ForensicFindingCard({
+  title,
+  description,
+  score,
+  status,
+  icon: Icon,
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      <div className="flex items-center justify-between">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10">
+          <Icon size={18} className="text-cyan-400" />
+        </div>
+
+        <span className="rounded-full border border-emerald-400/20 bg-emerald-400/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-300">
+          {status}
+        </span>
+      </div>
+
+      <h3 className="mt-5 text-sm font-semibold text-white">
+        {title}
+      </h3>
+
+      <p className="mt-2 min-h-[60px] text-xs leading-5 text-slate-500">
+        {description}
+      </p>
+
+      <div className="mt-4 flex items-center justify-between">
+        <span className="text-xs text-slate-500">
+          Confidence
+        </span>
+
+        <span className="text-sm font-bold text-cyan-300">
+          {score}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function HeatLegend({ label, type }) {
+  const classes = {
+    normal: "bg-emerald-400",
+    attention: "bg-amber-400",
+    danger: "bg-red-400",
+  };
+
+  return (
+    <div className="flex items-center gap-2 text-[10px] text-slate-400">
+      <span
+        className={`h-2.5 w-2.5 rounded-full ${classes[type]}`}
+      />
+      {label}
+    </div>
+  );
+}
 /* =========================
    INVESTIGATION
 ========================= */
