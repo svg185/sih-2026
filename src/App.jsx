@@ -2504,143 +2504,473 @@ function EvidenceSignal({ icon: Icon, title, value, description, danger = false 
 /* =========================
    AUDIT LOGS
 ========================= */
-
 function AuditLogs({ history }) {
+  const auditEvents = [
+    {
+      id: 1,
+      type: "success",
+      icon: ShieldCheck,
+      title: "Document Verification Completed",
+      description: "Identity document successfully passed AI screening.",
+      user: "AI Screening Engine",
+      time: "2 min ago",
+      status: "SUCCESS",
+    },
+    {
+      id: 2,
+      type: "warning",
+      icon: AlertTriangle,
+      title: "Suspicious Document Detected",
+      description: "Potential manipulation signal detected during forensic analysis.",
+      user: "Risk Engine",
+      time: "18 min ago",
+      status: "WARNING",
+    },
+    {
+      id: 3,
+      type: "info",
+      icon: UploadCloud,
+      title: "Document Uploaded",
+      description: "A new identity document entered the screening pipeline.",
+      user: "Verification Portal",
+      time: "31 min ago",
+      status: "INFO",
+    },
+    {
+      id: 4,
+      type: "danger",
+      icon: XCircle,
+      title: "High Risk Case Created",
+      description: "A high-risk screening result was added to investigation queue.",
+      user: "Risk Intelligence",
+      time: "46 min ago",
+      status: "CRITICAL",
+    },
+    {
+      id: 5,
+      type: "success",
+      icon: Database,
+      title: "External Database Check",
+      description: "Reference verification completed successfully.",
+      user: "Verification Engine",
+      time: "1 hr ago",
+      status: "SUCCESS",
+    },
+  ];
+
+  const stats = [
+    {
+      title: "Total Events",
+      value: "1,284",
+      icon: Activity,
+    },
+    {
+      title: "Successful",
+      value: "1,102",
+      icon: CheckCircle2,
+    },
+    {
+      title: "Warnings",
+      value: "128",
+      icon: AlertTriangle,
+    },
+    {
+      title: "Critical",
+      value: "54",
+      icon: XCircle,
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-7xl space-y-7">
       <PageHeading
         eyebrow="SECURITY AUDIT"
         title="Audit Logs"
-        description="Track screening operations and system activity."
+        description="Monitor verification activity, security events and system operations."
       />
 
-      <Panel>
-        <div className="space-y-1">
-          {history.map((item, index) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-4 rounded-xl p-4 transition hover:bg-white/[0.025]"
-            >
-              <div className="relative">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10">
-                  <Activity size={17} className="text-cyan-300" />
-                </div>
+      {/* Security status */}
+      <div className="flex flex-col gap-4 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.03] p-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-400/10">
+            <ShieldCheck
+              size={21}
+              className="text-emerald-400"
+            />
+          </div>
 
-                {index !== history.length - 1 && (
-                  <div className="absolute left-1/2 top-10 h-7 w-px bg-white/10" />
-                )}
-              </div>
+          <div>
+            <p className="text-sm font-bold text-white">
+              Security Monitoring Active
+            </p>
 
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold">
-                  Document screening completed
-                </p>
+            <p className="mt-1 text-xs text-slate-500">
+              All screening and investigation activities are being logged.
+            </p>
+          </div>
+        </div>
 
-                <p className="mt-1 truncate text-[11px] text-slate-500">
-                  {item.file} • AI screening engine
-                </p>
-              </div>
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+          <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.8)]" />
+          System Online
+        </div>
+      </div>
 
-              <StatusBadge status={item.status} />
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map((item) => (
+          <AuditStatCard
+            key={item.title}
+            title={item.title}
+            value={item.value}
+            icon={item.icon}
+          />
+        ))}
+      </div>
 
-              <span className="hidden text-[10px] text-slate-600 sm:block">
-                {item.time}
-              </span>
+      {/* Main content */}
+      <div className="grid gap-6 xl:grid-cols-[1.5fr_0.5fr]">
+        {/* Timeline */}
+        <Panel>
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-bold">
+                Security Activity
+              </p>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Latest events generated by the screening platform
+              </p>
             </div>
-          ))}
+
+            <div className="rounded-lg border border-cyan-400/10 bg-cyan-400/[0.03] px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-cyan-300">
+              LIVE LOG
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="absolute bottom-4 left-[19px] top-4 w-px bg-white/10" />
+
+            <div className="space-y-2">
+              {auditEvents.map((event) => {
+                const Icon = event.icon;
+
+                const tone =
+                  event.type === "success"
+                    ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/15"
+                    : event.type === "warning"
+                      ? "text-amber-400 bg-amber-400/10 border-amber-400/15"
+                      : event.type === "danger"
+                        ? "text-red-400 bg-red-400/10 border-red-400/15"
+                        : "text-cyan-400 bg-cyan-400/10 border-cyan-400/15";
+
+                return (
+                  <div
+                    key={event.id}
+                    className="relative flex gap-4 rounded-xl p-3 transition hover:bg-white/[0.025]"
+                  >
+                    <div
+                      className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${tone}`}
+                    >
+                      <Icon size={17} />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-xs font-bold text-white">
+                            {event.title}
+                          </p>
+
+                          <p className="mt-1 text-[10px] leading-5 text-slate-500">
+                            {event.description}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`w-fit rounded-full border px-2 py-1 text-[8px] font-bold ${
+                            event.type === "success"
+                              ? "border-emerald-400/15 bg-emerald-400/5 text-emerald-300"
+                              : event.type === "warning"
+                                ? "border-amber-400/15 bg-amber-400/5 text-amber-300"
+                                : event.type === "danger"
+                                  ? "border-red-400/15 bg-red-400/5 text-red-300"
+                                  : "border-cyan-400/15 bg-cyan-400/5 text-cyan-300"
+                          }`}
+                        >
+                          {event.status}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-[9px] text-slate-600">
+                        <span>{event.user}</span>
+                        <span>•</span>
+                        <span>{event.time}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </Panel>
+
+        {/* Security Summary */}
+        <div className="space-y-6">
+          <Panel>
+            <p className="text-sm font-bold">
+              Security Summary
+            </p>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Current audit distribution
+            </p>
+
+            <div className="mt-6 space-y-5">
+              <AuditProgress
+                label="Successful Events"
+                value={86}
+                tone="green"
+              />
+
+              <AuditProgress
+                label="Warning Events"
+                value={10}
+                tone="yellow"
+              />
+
+              <AuditProgress
+                label="Critical Events"
+                value={4}
+                tone="red"
+              />
+            </div>
+          </Panel>
+
+          <Panel>
+            <div className="flex items-center gap-3">
+              <LockKeyhole
+                size={18}
+                className="text-cyan-400"
+              />
+
+              <div>
+                <p className="text-xs font-bold text-white">
+                  Audit Protection
+                </p>
+
+                <p className="mt-1 text-[10px] text-slate-600">
+                  Event records are tracked for security review.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              <AuditCheck
+                label="Event Tracking"
+                value="ACTIVE"
+              />
+
+              <AuditCheck
+                label="Screening Logs"
+                value="ACTIVE"
+              />
+
+              <AuditCheck
+                label="Risk Events"
+                value="ACTIVE"
+              />
+
+              <AuditCheck
+                label="Investigation Logs"
+                value="ACTIVE"
+              />
+            </div>
+          </Panel>
+        </div>
+      </div>
+
+      {/* Recent screening records */}
+      <Panel>
+        <div className="mb-5">
+          <p className="text-sm font-bold">
+            Recent Screening Records
+          </p>
+
+          <p className="mt-1 text-xs text-slate-500">
+            Latest documents processed by the system
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[650px] text-left">
+            <thead>
+              <tr className="border-b border-white/10">
+                <th className="px-3 py-3 text-[9px] uppercase tracking-wider text-slate-600">
+                  Document
+                </th>
+
+                <th className="px-3 py-3 text-[9px] uppercase tracking-wider text-slate-600">
+                  Type
+                </th>
+
+                <th className="px-3 py-3 text-[9px] uppercase tracking-wider text-slate-600">
+                  Result
+                </th>
+
+                <th className="px-3 py-3 text-[9px] uppercase tracking-wider text-slate-600">
+                  Score
+                </th>
+
+                <th className="px-3 py-3 text-right text-[9px] uppercase tracking-wider text-slate-600">
+                  Time
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {history.slice(0, 5).map((item) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-white/5 last:border-0"
+                >
+                  <td className="px-3 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400/5">
+                        <FileText
+                          size={14}
+                          className="text-cyan-300"
+                        />
+                      </div>
+
+                      <span className="text-xs font-semibold text-white">
+                        {item.file}
+                      </span>
+                    </div>
+                  </td>
+
+                  <td className="px-3 py-4 text-[10px] text-slate-500">
+                    {item.type}
+                  </td>
+
+                  <td className="px-3 py-4">
+                    <StatusBadge status={item.status} />
+                  </td>
+
+                  <td className="px-3 py-4">
+                    <span className="text-xs font-bold text-cyan-300">
+                      {item.score}%
+                    </span>
+                  </td>
+
+                  <td className="px-3 py-4 text-right text-[10px] text-slate-600">
+                    {item.time}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Panel>
-    </div>
-  );
-}
 
-/* =========================
-   SETTINGS
-========================= */
+      {/* Demo notice */}
+      <div className="rounded-2xl border border-amber-400/10 bg-amber-400/[0.025] p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle
+            size={17}
+            className="mt-0.5 shrink-0 text-amber-400"
+          />
 
-function SettingsPage({ settings, setSettings }) {
-  const toggleSetting = (key) => {
-    setSettings((current) => ({
-      ...current,
-      [key]: !current[key],
-    }));
-  };
+          <div>
+            <p className="text-xs font-bold text-white">
+              Demonstration Audit Dataset
+            </p>
 
-  return (
-    <div className="mx-auto max-w-5xl space-y-7">
-      <PageHeading
-        eyebrow="PLATFORM CONFIGURATION"
-        title="Settings"
-        description="Configure security and screening preferences."
-      />
-
-      <Panel>
-        <SettingRow
-          icon={BrainCircuit}
-          title="AI Screening Engine"
-          description="Enable automated document authenticity analysis."
-          enabled={settings.aiScreening}
-          onToggle={() => toggleSetting("aiScreening")}
-        />
-
-        <SettingRow
-          icon={Fingerprint}
-          title="Biometric Verification"
-          description="Enable face matching and liveness verification."
-          enabled={settings.biometric}
-          onToggle={() => toggleSetting("biometric")}
-        />
-
-        <SettingRow
-          icon={AlertTriangle}
-          title="High Risk Alerts"
-          description="Generate alerts for high-risk screening results."
-          enabled={settings.alerts}
-          onToggle={() => toggleSetting("alerts")}
-        />
-
-        <SettingRow
-          icon={Database}
-          title="External Identity Database"
-          description="Use connected identity verification services."
-          enabled={settings.externalDatabase}
-          onToggle={() => toggleSetting("externalDatabase")}
-        />
-      </Panel>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Panel className="border-cyan-400/10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10">
-              <ShieldCheck size={18} className="text-cyan-300" />
-            </div>
-            <div>
-              <p className="text-xs font-bold">Security Profile</p>
-              <p className="mt-1 text-[10px] text-slate-600">
-                Recommended configuration is enabled.
-              </p>
-            </div>
+            <p className="mt-1 text-[10px] leading-5 text-slate-600">
+              Current audit events are demonstration records. When the
+              backend is connected, this timeline will receive live
+              authentication, screening, risk and investigation events.
+            </p>
           </div>
-        </Panel>
-
-        <Panel className="border-emerald-400/10">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10">
-              <Activity size={18} className="text-emerald-300" />
-            </div>
-            <div>
-              <p className="text-xs font-bold">System Status</p>
-              <p className="mt-1 text-[10px] text-emerald-400">
-                Configuration saved locally
-              </p>
-            </div>
-          </div>
-        </Panel>
+        </div>
       </div>
     </div>
   );
 }
 
+function AuditStatCard({ title, value, icon: Icon }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-cyan-400/15 hover:bg-white/[0.045]">
+      <div className="flex items-start justify-between">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10">
+          <Icon
+            size={18}
+            className="text-cyan-300"
+          />
+        </div>
+
+        <Activity
+          size={15}
+          className="text-slate-700"
+        />
+      </div>
+
+      <p className="mt-5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+        {title}
+      </p>
+
+      <p className="mt-1 text-2xl font-black text-white">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function AuditProgress({ label, value, tone }) {
+  const tones = {
+    green: "from-emerald-400 to-green-500",
+    yellow: "from-amber-400 to-yellow-500",
+    red: "from-red-400 to-rose-500",
+  };
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-[10px] text-slate-500">
+          {label}
+        </span>
+
+        <span className="text-[10px] font-bold text-white">
+          {value}%
+        </span>
+      </div>
+
+      <div className="h-2 overflow-hidden rounded-full bg-white/5">
+        <div
+          className={`h-full rounded-full bg-gradient-to-r ${
+            tones[tone] || tones.green
+          }`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function AuditCheck({ label, value }) {
+  return (
+    <div className="flex items-center justify-between border-b border-white/5 pb-3 last:border-0 last:pb-0">
+      <span className="text-[10px] text-slate-500">
+        {label}
+      </span>
+
+      <span className="flex items-center gap-1.5 text-[9px] font-bold text-emerald-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+        {value}
+      </span>
+    </div>
+  );
+}
 /* =========================
    RECENT SCREENINGS
 ========================= */
