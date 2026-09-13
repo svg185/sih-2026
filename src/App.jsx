@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -17,12 +17,10 @@ import {
 import {
   Activity,
   AlertTriangle,
-  BarChart3,
   Bell,
   BrainCircuit,
   CheckCircle2,
   ChevronRight,
-  Clock3,
   Database,
   FileCheck2,
   FileSearch,
@@ -41,7 +39,6 @@ import {
   Sparkles,
   UploadCloud,
   UserRound,
-  Users,
   X,
   XCircle,
   Zap,
@@ -137,6 +134,13 @@ function App() {
 
   const [history, setHistory] = useState(historyData);
 
+  const [settings, setSettings] = useState({
+    aiScreening: true,
+    biometric: true,
+    alerts: true,
+    externalDatabase: false,
+  });
+
   const filteredHistory = useMemo(() => {
     return history.filter((item) => {
       const matchesSearch = item.file
@@ -208,7 +212,7 @@ function App() {
         extractedData: {
           documentType: "Aadhaar Card",
           documentNumber: "XXXX XXXX 4821",
-          name: "RAHUL SAMMAL",
+          name: "SAMPLE USER",
           dob: "15 Aug 2004",
           gender: "Male",
         },
@@ -307,7 +311,9 @@ function App() {
             <AuditLogs history={history} />
           )}
 
-          {activePage === "Settings" && <SettingsPage />}
+          {activePage === "Settings" && (
+            <SettingsPage settings={settings} setSettings={setSettings} />
+          )}
         </main>
       </div>
     </div>
@@ -515,7 +521,11 @@ function Header({
           </div>
         </div>
 
-        <button className="relative rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-slate-400 hover:text-white">
+        <button
+          type="button"
+          title="Notifications"
+          className="relative rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-slate-400 hover:text-white"
+        >
           <Bell size={18} />
           <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cyan-400" />
         </button>
@@ -751,7 +761,7 @@ function Dashboard({ navigate, history, scanResult }) {
             <div>
               <p className="text-sm font-bold">AI Engine Status</p>
               <p className="mt-1 text-xs text-slate-500">
-                Live system diagnostics
+                Current system diagnostics
               </p>
             </div>
 
@@ -793,7 +803,7 @@ function Dashboard({ navigate, history, scanResult }) {
               <div className="flex items-center gap-2 text-cyan-300">
                 <Sparkles size={16} />
                 <span className="text-xs font-bold">
-                  Latest AI Screening
+                  Latest Screening Result
                 </span>
               </div>
 
@@ -816,7 +826,6 @@ function Dashboard({ navigate, history, scanResult }) {
 /* =========================
    UPLOAD PAGE
 ========================= */
-
 function UploadPage({
   selectedFile,
   setSelectedFile,
@@ -829,171 +838,339 @@ function UploadPage({
   error,
   scanResult,
 }) {
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  useEffect(() => {
+    if (!selectedFile || !selectedFile.type?.startsWith("image/")) {
+      setPreviewUrl(null);
+      return undefined;
+    }
+
+    const url = URL.createObjectURL(selectedFile);
+    setPreviewUrl(url);
+
+    return () => URL.revokeObjectURL(url);
+  }, [selectedFile]);
+
   return (
-    <div className="mx-auto max-w-6xl space-y-7">
+    <div className="mx-auto max-w-7xl space-y-7">
       <PageHeading
-        eyebrow="DOCUMENT INGESTION"
+        eyebrow="AI DOCUMENT ANALYSIS"
         title="Upload & Screen"
-        description="Upload an identity document and run the AI authenticity screening pipeline."
+        description="Upload an identity document and let the AI engine perform multi-layer authenticity analysis."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-        <Panel className="overflow-hidden">
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={handleDrop}
-            className={`relative flex min-h-[370px] flex-col items-center justify-center rounded-2xl border border-dashed p-8 text-center transition ${
-              isDragging
-                ? "border-cyan-400 bg-cyan-400/[0.06]"
-                : "border-white/10 bg-white/[0.015]"
-            }`}
-          >
-            <div className="absolute left-5 top-5 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-red-400" />
-              <span className="h-2 w-2 rounded-full bg-yellow-400" />
-              <span className="h-2 w-2 rounded-full bg-green-400" />
-            </div>
-
-            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-cyan-400/10 ring-1 ring-cyan-400/20">
-              <UploadCloud size={36} className="text-cyan-300" />
-            </div>
-
-            <h3 className="text-xl font-bold">
-              Drop your document here
-            </h3>
-
-            <p className="mt-2 max-w-md text-sm text-slate-500">
-              Upload Aadhaar, PAN, Passport, Driving License or other supported
-              identity documents.
-            </p>
-
-            <label className="mt-7 cursor-pointer rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-100">
-              Choose File
-              <input
-                type="file"
-                className="hidden"
-                accept=".jpg,.jpeg,.png,.pdf"
-                onChange={handleFileChange}
+      {!selectedFile ? (
+        <div className="grid gap-6 lg:grid-cols-[1.5fr_0.8fr]">
+          {/* UPLOAD AREA */}
+          <Panel className="overflow-hidden">
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              className={`relative flex min-h-[430px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed p-8 text-center transition-all duration-300 ${
+                isDragging
+                  ? "border-cyan-400 bg-cyan-400/[0.08] shadow-[0_0_60px_rgba(34,211,238,.08)]"
+                  : "border-white/10 bg-white/[0.015] hover:border-cyan-400/30"
+              }`}
+            >
+              {/* Decorative grid */}
+              <div
+                className="pointer-events-none absolute inset-0 opacity-30"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(rgba(34,211,238,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.08) 1px, transparent 1px)",
+                  backgroundSize: "45px 45px",
+                }}
               />
-            </label>
 
-            <p className="mt-4 text-[11px] text-slate-600">
-              JPG, PNG or PDF • Maximum 10 MB
-            </p>
-          </div>
+              {/* Glow */}
+              <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[90px]" />
 
-          {error && (
-            <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-300">
-              <AlertTriangle size={15} />
-              {error}
-            </div>
-          )}
+              {/* Top status */}
+              <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 backdrop-blur">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                <span className="text-[9px] font-bold tracking-wider text-slate-500">
+                  SECURE UPLOAD CHANNEL
+                </span>
+              </div>
 
-          {selectedFile && (
-            <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-400/10">
-                  <FileText className="text-cyan-300" />
+              {/* Upload icon */}
+              <div className="relative z-10 mb-7">
+                <div className="flex h-24 w-24 items-center justify-center rounded-[28px] border border-cyan-400/20 bg-cyan-400/[0.07] shadow-[0_0_50px_rgba(34,211,238,.08)]">
+                  <UploadCloud
+                    size={42}
+                    strokeWidth={1.5}
+                    className="text-cyan-300"
+                  />
                 </div>
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">
-                    {selectedFile.name}
+                <div className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-400/20 bg-[#0a1020]">
+                  <ShieldCheck size={14} className="text-cyan-300" />
+                </div>
+              </div>
+
+              <div className="relative z-10">
+                <h3 className="text-2xl font-black tracking-tight">
+                  Drop your document here
+                </h3>
+
+                <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-500">
+                  Securely upload an identity document for AI-powered
+                  authenticity, OCR, biometric and forensic analysis.
+                </p>
+
+                <label className="mt-7 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-slate-950 shadow-lg transition hover:-translate-y-0.5 hover:bg-cyan-50">
+                  <UploadCloud size={17} />
+                  Select Document
+
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={handleFileChange}
+                  />
+                </label>
+
+                <p className="mt-4 text-[10px] text-slate-600">
+                  JPG • PNG • PDF &nbsp;|&nbsp; Maximum 10 MB
+                </p>
+              </div>
+            </div>
+
+            {error && (
+              <div className="mt-4 flex items-center gap-3 rounded-xl border border-red-400/20 bg-red-400/[0.05] p-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-400/10">
+                  <AlertTriangle size={15} className="text-red-400" />
+                </div>
+
+                <p className="text-xs text-red-300">{error}</p>
+              </div>
+            )}
+          </Panel>
+
+          {/* SECURITY FEATURES */}
+          <Panel>
+            <div className="mb-6">
+              <p className="text-sm font-bold">AI Verification Pipeline</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Every document passes through multiple security layers.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <SecurityStep
+                number="01"
+                icon={FileSearch}
+                title="Visual Analysis"
+                text="Detect document structure and manipulation."
+              />
+
+              <SecurityStep
+                number="02"
+                icon={FileText}
+                title="OCR Intelligence"
+                text="Extract and validate identity information."
+              />
+
+              <SecurityStep
+                number="03"
+                icon={Fingerprint}
+                title="Biometric Match"
+                text="Compare facial identity signals."
+              />
+
+              <SecurityStep
+                number="04"
+                icon={BrainCircuit}
+                title="Fraud Detection"
+                text="Identify anomalies and suspicious patterns."
+              />
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-cyan-400/10 bg-gradient-to-br from-cyan-400/[0.06] to-blue-500/[0.02] p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10">
+                  <LockKeyhole size={18} className="text-cyan-300" />
+                </div>
+
+                <div>
+                  <p className="text-xs font-bold">Protected Processing</p>
+                  <p className="mt-1 text-[10px] text-slate-600">
+                    Secure document analysis environment
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Panel>
+        </div>
+      ) : (
+        <div className="space-y-5">
+          {/* DOCUMENT PREVIEW */}
+          <Panel>
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-bold">Document Preview</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Review the uploaded document before screening.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1.5 text-[9px] font-bold text-emerald-300">
+                  FILE VALID
+                </span>
+
+                <button
+                  onClick={() => setSelectedFile(null)}
+                  className="rounded-lg border border-white/10 p-2 text-slate-500 transition hover:bg-white/5 hover:text-white"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
+              {/* Preview */}
+              <div className="relative flex min-h-[390px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#050816] p-6">
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-20"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(rgba(34,211,238,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.12) 1px, transparent 1px)",
+                    backgroundSize: "35px 35px",
+                  }}
+                />
+
+                {selectedFile.type.startsWith("image/") ? (
+                  <div className="relative max-h-[350px] max-w-full overflow-hidden rounded-xl border border-white/10 shadow-2xl">
+                    <img
+                      src={previewUrl}
+                      alt="Uploaded document"
+                      className="max-h-[350px] max-w-full object-contain"
+                    />
+
+                    {/* AI scan overlay */}
+                    {isScanning && (
+                      <>
+                        <div className="scan-line absolute left-0 right-0 h-[2px] bg-cyan-300 shadow-[0_0_18px_5px_rgba(34,211,238,.65)]" />
+
+                        <div className="absolute inset-0 bg-cyan-400/[0.04]" />
+
+                        <div className="absolute left-3 top-3 rounded-lg border border-cyan-400/30 bg-black/50 px-2.5 py-1.5 text-[9px] font-bold text-cyan-300 backdrop-blur">
+                          AI ANALYZING
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative flex w-full max-w-md flex-col items-center rounded-2xl border border-white/10 bg-white/[0.025] p-12">
+                    <FileText
+                      size={70}
+                      strokeWidth={1.2}
+                      className="text-red-300"
+                    />
+
+                    <p className="mt-5 max-w-full truncate text-sm font-bold">
+                      {selectedFile.name}
+                    </p>
+
+                    <p className="mt-2 text-xs text-slate-600">
+                      PDF document
+                    </p>
+
+                    {isScanning && (
+                      <div className="absolute inset-x-8 bottom-5">
+                        <div className="scan-progress" />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* File information */}
+              <div className="flex flex-col">
+                <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                    Document Information
                   </p>
 
-                  <p className="mt-1 text-xs text-slate-500">
-                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  <div className="mt-5 space-y-4">
+                    <InfoRow
+                      label="File Name"
+                      value={selectedFile.name}
+                    />
+
+                    <InfoRow
+                      label="File Type"
+                      value={selectedFile.type || "PDF"}
+                    />
+
+                    <InfoRow
+                      label="File Size"
+                      value={`${(
+                        selectedFile.size /
+                        1024 /
+                        1024
+                      ).toFixed(2)} MB`}
+                    />
+
+                    <InfoRow
+                      label="Upload Status"
+                      value="Validated"
+                      green
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.035] p-5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-cyan-300" />
+
+                    <span className="text-xs font-bold">
+                      Ready for AI Analysis
+                    </span>
+                  </div>
+
+                  <p className="mt-2 text-[10px] leading-5 text-slate-600">
+                    The screening engine will evaluate document integrity,
+                    extracted data, biometric signals and fraud indicators.
                   </p>
                 </div>
 
                 <button
-                  onClick={() => setSelectedFile(null)}
-                  className="rounded-lg p-2 text-slate-500 hover:bg-white/5 hover:text-white"
+                  onClick={startScreening}
+                  disabled={isScanning}
+                  className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 py-4 text-sm font-black text-slate-950 shadow-[0_0_35px_rgba(34,211,238,.12)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <X size={17} />
+                  {isScanning ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950 border-t-transparent" />
+                      AI ENGINE RUNNING...
+                    </>
+                  ) : (
+                    <>
+                      <BrainCircuit size={18} />
+                      Start AI Screening
+                    </>
+                  )}
                 </button>
               </div>
-
-              <button
-                onClick={startScreening}
-                disabled={isScanning}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 py-3 text-sm font-bold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isScanning ? (
-                  <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
-                    AI Screening in Progress...
-                  </>
-                ) : (
-                  <>
-                    <Zap size={17} />
-                    Start AI Screening
-                  </>
-                )}
-              </button>
             </div>
+          </Panel>
+
+          {/* LIVE SCANNING */}
+          {isScanning && <AIScanningPanel />}
+
+          {/* RESULT */}
+          {scanResult && !isScanning && (
+            <ResultSection result={scanResult} />
           )}
-        </Panel>
-
-        <Panel>
-          <div className="mb-6">
-            <p className="text-sm font-bold">Screening Pipeline</p>
-            <p className="mt-1 text-xs text-slate-500">
-              Multi-layer document analysis
-            </p>
-          </div>
-
-          <div className="space-y-5">
-            <PipelineStep
-              number="01"
-              icon={FileSearch}
-              title="Document Analysis"
-              description="Structure and visual integrity"
-            />
-
-            <PipelineStep
-              number="02"
-              icon={FileText}
-              title="OCR Extraction"
-              description="Extract identity information"
-            />
-
-            <PipelineStep
-              number="03"
-              icon={Fingerprint}
-              title="Biometric Match"
-              description="Face and identity comparison"
-            />
-
-            <PipelineStep
-              number="04"
-              icon={BrainCircuit}
-              title="AI Risk Assessment"
-              description="Fraud and anomaly detection"
-            />
-          </div>
-
-          <div className="mt-7 rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.04] p-4">
-            <div className="flex items-center gap-2 text-cyan-300">
-              <LockKeyhole size={16} />
-              <span className="text-xs font-bold">
-                Secure Processing
-              </span>
-            </div>
-
-            <p className="mt-2 text-[11px] leading-5 text-slate-500">
-              Uploaded documents are processed through the screening pipeline
-              and protected during analysis.
-            </p>
-          </div>
-        </Panel>
-      </div>
-
-      {scanResult && <ResultSection result={scanResult} />}
+        </div>
+      )}
     </div>
   );
 }
@@ -1100,7 +1277,7 @@ function RiskDashboard() {
           <div className="mb-6">
             <p className="text-sm font-bold">Risk Score Trend</p>
             <p className="mt-1 text-xs text-slate-500">
-              Average risk score across screening activity
+              Suspicious and fake cases across screening activity
             </p>
           </div>
 
@@ -1384,8 +1561,11 @@ function InvestigationPage({ history }) {
                     </td>
 
                     <td className="px-4 py-4">
-                      <button className="rounded-lg border border-white/10 px-3 py-2 text-[10px] font-bold text-slate-300 hover:bg-white/5">
-                        Investigate
+                      <button
+                        type="button"
+                        className="rounded-lg border border-white/10 px-3 py-2 text-[10px] font-bold text-slate-300 hover:bg-white/5"
+                      >
+                        Review
                       </button>
                     </td>
                   </tr>
@@ -1455,7 +1635,14 @@ function AuditLogs({ history }) {
    SETTINGS
 ========================= */
 
-function SettingsPage() {
+function SettingsPage({ settings, setSettings }) {
+  const toggleSetting = (key) => {
+    setSettings((current) => ({
+      ...current,
+      [key]: !current[key],
+    }));
+  };
+
   return (
     <div className="mx-auto max-w-5xl space-y-7">
       <PageHeading
@@ -1469,30 +1656,64 @@ function SettingsPage() {
           icon={BrainCircuit}
           title="AI Screening Engine"
           description="Enable automated document authenticity analysis."
-          enabled
+          enabled={settings.aiScreening}
+          onToggle={() => toggleSetting("aiScreening")}
         />
 
         <SettingRow
           icon={Fingerprint}
           title="Biometric Verification"
           description="Enable face matching and liveness verification."
-          enabled
+          enabled={settings.biometric}
+          onToggle={() => toggleSetting("biometric")}
         />
 
         <SettingRow
           icon={AlertTriangle}
           title="High Risk Alerts"
           description="Generate alerts for high-risk screening results."
-          enabled
+          enabled={settings.alerts}
+          onToggle={() => toggleSetting("alerts")}
         />
 
         <SettingRow
           icon={Database}
           title="External Identity Database"
           description="Use connected identity verification services."
-          enabled={false}
+          enabled={settings.externalDatabase}
+          onToggle={() => toggleSetting("externalDatabase")}
         />
       </Panel>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Panel className="border-cyan-400/10">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10">
+              <ShieldCheck size={18} className="text-cyan-300" />
+            </div>
+            <div>
+              <p className="text-xs font-bold">Security Profile</p>
+              <p className="mt-1 text-[10px] text-slate-600">
+                Recommended configuration is enabled.
+              </p>
+            </div>
+          </div>
+        </Panel>
+
+        <Panel className="border-emerald-400/10">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10">
+              <Activity size={18} className="text-emerald-300" />
+            </div>
+            <div>
+              <p className="text-xs font-bold">System Status</p>
+              <p className="mt-1 text-[10px] text-emerald-400">
+                Configuration saved locally
+              </p>
+            </div>
+          </div>
+        </Panel>
+      </div>
     </div>
   );
 }
@@ -1512,10 +1733,10 @@ function RecentScreenings({ history }) {
           </p>
         </div>
 
-        <button className="flex items-center gap-1 text-[10px] font-bold text-cyan-300">
-          View All
+        <span className="flex items-center gap-1 text-[10px] font-bold text-cyan-300">
+          Latest Activity
           <ChevronRight size={13} />
-        </button>
+        </span>
       </div>
 
       <div className="overflow-x-auto">
@@ -1950,7 +2171,10 @@ function StatusBadge({ status }) {
 
   return (
     <span
-      className={`inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-[9px] font-bold ${styles[status]}`}
+      className={`inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-[9px] font-bold ${
+        styles[status] ||
+        "border-slate-400/20 bg-slate-400/5 text-slate-300"
+      }`}
     >
       {status}
     </span>
@@ -1997,6 +2221,7 @@ function SettingRow({
   title,
   description,
   enabled,
+  onToggle,
 }) {
   return (
     <div className="flex items-center gap-4 border-b border-white/5 py-5 last:border-0">
@@ -2009,8 +2234,12 @@ function SettingRow({
         <p className="mt-1 text-[10px] text-slate-600">{description}</p>
       </div>
 
-      <div
-        className={`h-6 w-11 rounded-full p-1 transition ${
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={`Toggle ${title}`}
+        aria-pressed={enabled}
+        className={`h-6 w-11 rounded-full p-1 text-left transition ${
           enabled ? "bg-cyan-400" : "bg-white/10"
         }`}
       >
@@ -2019,8 +2248,141 @@ function SettingRow({
             enabled ? "ml-5" : "ml-0"
           }`}
         />
+      </button>
+    </div>
+  );
+}
+
+
+function SecurityStep({ number, icon: Icon, title, text }) {
+  return (
+    <div className="group flex gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 transition hover:border-cyan-400/10 hover:bg-cyan-400/[0.025]">
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/5">
+        <Icon size={17} className="text-cyan-300" />
+        <span className="absolute -right-1.5 -top-1.5 rounded-md border border-white/10 bg-[#0a1020] px-1 text-[7px] font-bold text-slate-600">
+          {number}
+        </span>
+      </div>
+      <div>
+        <p className="text-xs font-bold">{title}</p>
+        <p className="mt-1 text-[10px] leading-4 text-slate-600">{text}</p>
       </div>
     </div>
+  );
+}
+
+function InfoRow({ label, value, green = false }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-white/5 pb-3 last:border-0 last:pb-0">
+      <span className="text-[10px] text-slate-600">{label}</span>
+      <span
+        className={`max-w-[65%] truncate text-right text-[10px] font-semibold ${
+          green ? "text-emerald-400" : "text-slate-300"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function AIScanningPanel() {
+  const stages = [
+    {
+      icon: FileSearch,
+      title: "Document Structure",
+      text: "Analyzing visual patterns...",
+      progress: 100,
+    },
+    {
+      icon: FileText,
+      title: "OCR Extraction",
+      text: "Reading identity information...",
+      progress: 82,
+    },
+    {
+      icon: Fingerprint,
+      title: "Biometric Analysis",
+      text: "Matching identity signals...",
+      progress: 56,
+    },
+    {
+      icon: BrainCircuit,
+      title: "AI Risk Assessment",
+      text: "Calculating fraud probability...",
+      progress: 28,
+    },
+  ];
+
+  return (
+    <Panel className="relative overflow-hidden border-cyan-400/10">
+      <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-cyan-400/10 blur-[90px]" />
+
+      <div className="relative">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-60" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400" />
+              </span>
+              <span className="text-xs font-black tracking-wider text-cyan-300">
+                AI SCREENING IN PROGRESS
+              </span>
+            </div>
+            <p className="mt-2 text-[10px] text-slate-600">
+              Multi-layer authenticity analysis is currently running.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-full border border-cyan-400/10 bg-cyan-400/5 px-3 py-1.5">
+            <Zap size={12} className="text-cyan-300" />
+            <span className="text-[9px] font-bold text-cyan-300">
+              AI ENGINE ONLINE
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-7 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {stages.map((stage) => {
+            const Icon = stage.icon;
+
+            return (
+              <div
+                key={stage.title}
+                className="rounded-xl border border-white/5 bg-white/[0.02] p-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-400/5">
+                    <Icon size={16} className="text-cyan-300" />
+                  </div>
+                  <span className="text-[9px] font-bold text-cyan-400">
+                    {stage.progress}%
+                  </span>
+                </div>
+
+                <p className="mt-4 text-xs font-bold">{stage.title}</p>
+                <p className="mt-1 text-[10px] text-slate-600">
+                  {stage.text}
+                </p>
+
+                <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-700"
+                    style={{ width: `${stage.progress}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-5 flex items-center justify-center gap-2 text-[10px] text-slate-600">
+          <Activity size={13} className="animate-pulse text-cyan-400" />
+          Processing document intelligence...
+        </div>
+      </div>
+    </Panel>
   );
 }
 

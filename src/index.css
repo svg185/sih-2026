@@ -35,3 +35,54 @@ button {
 ::selection {
   background: rgba(34, 211, 238, 0.25);
 }
+@keyframes scanMove {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.scan-line {
+  animation: scanMove 2s linear infinite;
+  z-index: 20;
+}
+
+@keyframes scanProgress {
+  0% {
+    width: 0%;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+.scan-progress {
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #22d3ee,
+    #3b82f6,
+    #22d3ee
+  );
+  animation: scanProgress 2.2s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+}
