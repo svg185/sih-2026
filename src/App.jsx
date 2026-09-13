@@ -1397,6 +1397,333 @@ function VerificationPage({
   );
 }
 
+function RiskDashboard() {
+  const [activeRisk, setActiveRisk] = useState("All");
+
+  const riskCases = useMemo(() => {
+    return historyData.map((item) => ({
+      ...item,
+      riskScore: Math.max(0, 100 - item.score),
+      category:
+        item.status === "Fake Detected"
+          ? "High"
+          : item.status === "Suspicious"
+            ? "Medium"
+            : "Low",
+      signal:
+        item.status === "Fake Detected"
+          ? "Potential tampering detected"
+          : item.status === "Suspicious"
+            ? "Identity consistency requires review"
+            : "No major anomaly detected",
+    }));
+  }, []);
+
+  const filteredCases = riskCases.filter((item) =>
+    activeRisk === "All" ? true : item.category === activeRisk
+  );
+
+  const counts = {
+    all: riskCases.length,
+    low: riskCases.filter((item) => item.category === "Low").length,
+    medium: riskCases.filter((item) => item.category === "Medium").length,
+    high: riskCases.filter((item) => item.category === "High").length,
+  };
+
+  return (
+    <div className="space-y-6">
+      <PageHeading
+        eyebrow="RISK INTELLIGENCE"
+        title="Risk Dashboard"
+        description="Monitor document risk levels, suspicious signals and screening trends from the current frontend demo dataset."
+        icon={Gauge}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <RiskOverviewCard
+          title="Overall Risk"
+          value="10%"
+          subtitle="High-risk screening rate"
+          icon={Shield}
+          tone="red"
+        />
+        <RiskOverviewCard
+          title="Low Risk"
+          value={`${Math.round(riskData[0].value)}%`}
+          subtitle="Clear screening profile"
+          icon={CheckCircle2}
+          tone="green"
+        />
+        <RiskOverviewCard
+          title="Medium Risk"
+          value={`${Math.round(riskData[1].value)}%`}
+          subtitle="Requires secondary review"
+          icon={AlertTriangle}
+          tone="amber"
+        />
+        <RiskOverviewCard
+          title="High Risk"
+          value={`${Math.round(riskData[2].value)}%`}
+          subtitle="Immediate investigation"
+          icon={XCircle}
+          tone="red"
+        />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <Panel>
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-bold text-white">Risk Distribution</p>
+              <p className="mt-1 text-xs text-slate-400">Current screening risk profile</p>
+            </div>
+            <div className="flex gap-2">
+              {riskData.map((item, index) => (
+                <div key={item.name} className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[index] }} />
+                  {item.name}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="h-[290px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={riskData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={78}
+                  outerRadius={112}
+                  paddingAngle={4}
+                  stroke="none"
+                >
+                  {riskData.map((item, index) => (
+                    <Cell key={item.name} fill={COLORS[index]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: "#0f172a",
+                    border: "1px solid rgba(148,163,184,.2)",
+                    borderRadius: 12,
+                    color: "#fff",
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+
+        <Panel>
+          <div className="mb-5">
+            <p className="text-sm font-bold text-white">Risk Response Matrix</p>
+            <p className="mt-1 text-xs text-slate-400">Recommended analyst action</p>
+          </div>
+          <div className="space-y-3">
+            <RiskResponseRow
+              label="Low Risk"
+              value="71%"
+              action="Auto-clear"
+              tone="green"
+            />
+            <RiskResponseRow
+              label="Medium Risk"
+              value="19%"
+              action="Secondary review"
+              tone="amber"
+            />
+            <RiskResponseRow
+              label="High Risk"
+              value="10%"
+              action="Investigate immediately"
+              tone="red"
+            />
+          </div>
+          <div className="mt-6 rounded-2xl border border-cyan-400/15 bg-cyan-400/5 p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-cyan-400/10 p-2 text-cyan-300">
+                <BrainCircuit size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">AI risk insight</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">
+                  Most screening volume is currently classified as low risk. Suspicious and fake detections should move to manual investigation before a final decision.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Panel>
+      </div>
+
+      <Panel>
+        <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-bold text-white">Risk Case Monitor</p>
+            <p className="mt-1 text-xs text-slate-400">Review the highest-impact screening signals</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {[
+              ["All", counts.all],
+              ["Low", counts.low],
+              ["Medium", counts.medium],
+              ["High", counts.high],
+            ].map(([label, count]) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => setActiveRisk(label)}
+                className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                  activeRisk === label
+                    ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-300"
+                    : "border-white/10 bg-white/[0.03] text-slate-400 hover:bg-white/[0.06] hover:text-white"
+                }`}
+              >
+                {label} ({count})
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left">
+            <thead>
+              <tr className="border-b border-white/10 text-[11px] uppercase tracking-wider text-slate-500">
+                <th className="pb-3 font-semibold">Document</th>
+                <th className="pb-3 font-semibold">Risk</th>
+                <th className="pb-3 font-semibold">Score</th>
+                <th className="pb-3 font-semibold">Signal</th>
+                <th className="pb-3 font-semibold">Status</th>
+                <th className="pb-3 text-right font-semibold">Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCases.map((item) => (
+                <tr key={item.id} className="border-b border-white/5 last:border-0">
+                  <td className="py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-white/5 p-2 text-cyan-300">
+                        <FileText size={16} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-white">{item.file}</p>
+                        <p className="text-xs text-slate-500">{item.type}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4">
+                    <RiskLevelBadge level={item.category} />
+                  </td>
+                  <td className="py-4">
+                    <div className="w-28">
+                      <div className="mb-1 flex justify-between text-[11px]">
+                        <span className="text-slate-500">Risk</span>
+                        <span className="font-semibold text-white">{item.riskScore}%</span>
+                      </div>
+                      <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${item.riskScore}%`,
+                            backgroundColor:
+                              item.category === "High"
+                                ? COLORS[2]
+                                : item.category === "Medium"
+                                  ? COLORS[1]
+                                  : COLORS[0],
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 text-xs text-slate-400">{item.signal}</td>
+                  <td className="py-4"><StatusBadge status={item.status} /></td>
+                  <td className="py-4 text-right text-xs text-slate-500">{item.time}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filteredCases.length === 0 && (
+            <div className="py-10 text-center text-sm text-slate-500">No cases match this risk filter.</div>
+          )}
+        </div>
+      </Panel>
+
+      <Panel>
+        <div className="mb-5">
+          <p className="text-sm font-bold text-white">Risk Assessment Pipeline</p>
+          <p className="mt-1 text-xs text-slate-400">Frontend representation of the screening decision flow</p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-4">
+          <RiskPipelineStep number="01" title="Document Intake" text="Validate file and document type." icon={UploadCloud} />
+          <RiskPipelineStep number="02" title="AI Screening" text="Check authenticity and visual consistency." icon={BrainCircuit} />
+          <RiskPipelineStep number="03" title="Risk Scoring" text="Combine detected signals into a risk profile." icon={Gauge} />
+          <RiskPipelineStep number="04" title="Investigation" text="Escalate suspicious cases for analyst review." icon={FolderSearch} />
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+function RiskOverviewCard({ title, value, subtitle, icon: Icon, tone }) {
+  const tones = {
+    green: "border-emerald-400/15 bg-emerald-400/5 text-emerald-300",
+    amber: "border-amber-400/15 bg-amber-400/5 text-amber-300",
+    red: "border-red-400/15 bg-red-400/5 text-red-300",
+  };
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-5 shadow-xl shadow-black/10">
+      <div className="flex items-center justify-between">
+        <div className={`rounded-xl border p-2.5 ${tones[tone] || tones.green}`}><Icon size={18} /></div>
+        <Sparkles size={15} className="text-slate-600" />
+      </div>
+      <p className="mt-5 text-xs font-medium text-slate-500">{title}</p>
+      <p className="mt-1 text-2xl font-black tracking-tight text-white">{value}</p>
+      <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
+    </div>
+  );
+}
+
+function RiskResponseRow({ label, value, action, tone }) {
+  const dot = tone === "red" ? "bg-red-400" : tone === "amber" ? "bg-amber-400" : "bg-emerald-400";
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3">
+      <div className="flex items-center gap-3">
+        <span className={`h-2.5 w-2.5 rounded-full ${dot}`} />
+        <span className="text-sm font-semibold text-white">{label}</span>
+      </div>
+      <div className="flex items-center gap-4">
+        <span className="text-xs font-bold text-slate-300">{value}</span>
+        <span className="hidden text-xs text-slate-500 sm:inline">{action}</span>
+      </div>
+    </div>
+  );
+}
+
+function RiskLevelBadge({ level }) {
+  const styles = {
+    Low: "border-emerald-400/20 bg-emerald-400/10 text-emerald-300",
+    Medium: "border-amber-400/20 bg-amber-400/10 text-amber-300",
+    High: "border-red-400/20 bg-red-400/10 text-red-300",
+  };
+  return <span className={`rounded-full border px-2.5 py-1 text-[11px] font-bold ${styles[level]}`}>{level}</span>;
+}
+
+function RiskPipelineStep({ number, title, text, icon: Icon }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-black tracking-widest text-cyan-400">{number}</span>
+        <Icon size={17} className="text-slate-500" />
+      </div>
+      <p className="mt-4 text-sm font-bold text-white">{title}</p>
+      <p className="mt-1 text-xs leading-5 text-slate-500">{text}</p>
+    </div>
+  );
+}
+
 function ForensicAnalysisPage({ scanResult, setActivePage, selectedFile }) {
   const forensic = {
     documentIntegrity: 96,
