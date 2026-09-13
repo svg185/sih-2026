@@ -1704,8 +1704,6 @@ function RiskDashboard() {
 ========================= */
 
 function ForensicAnalysisPage({ scanResult, setActivePage, selectedFile }) {
-  // Demo values are used only until the real AI/backend response is available.
-  // When scanResult.forensic exists, those real values automatically take priority.
   const forensic = {
     documentIntegrity: 96,
     ocrAccuracy: 98,
@@ -1717,43 +1715,28 @@ function ForensicAnalysisPage({ scanResult, setActivePage, selectedFile }) {
   };
 
   const demoMode = !scanResult?.forensic;
+  const [activeZone, setActiveZone] = useState("Document Structure");
+  const [viewMode, setViewMode] = useState("heatmap");
+
+  const zones = [
+    { name: "Document Structure", score: forensic.documentIntegrity, level: "Normal", icon: FileCheck2 },
+    { name: "Text Region", score: forensic.ocrAccuracy, level: forensic.ocrAccuracy >= 90 ? "Normal" : "Attention", icon: FileText },
+    { name: "Face Region", score: forensic.faceMatch, level: forensic.faceMatch >= 90 ? "Normal" : "Attention", icon: Fingerprint },
+    { name: "Signature / Mark", score: Math.max(0, 100 - forensic.tampering), level: forensic.tampering <= 20 ? "Normal" : "Anomaly", icon: ShieldCheck },
+  ];
 
   const findings = [
-    {
-      title: "Document Structure",
-      description: "Document layout and structural patterns are consistent with the expected format.",
-      score: forensic.documentIntegrity,
-      status: forensic.documentIntegrity >= 90 ? "Passed" : "Review",
-      icon: FileCheck2,
-    },
-    {
-      title: "OCR Consistency",
-      description: "Extracted text shows high confidence with no significant character anomalies.",
-      score: forensic.ocrAccuracy,
-      status: forensic.ocrAccuracy >= 90 ? "Passed" : "Review",
-      icon: FileSearch,
-    },
-    {
-      title: "Face Match",
-      description: "Detected face region is compared against the identity image during biometric verification.",
-      score: forensic.faceMatch,
-      status: forensic.faceMatch >= 90 ? "Matched" : "Review",
-      icon: Fingerprint,
-    },
-    {
-      title: "Liveness Detection",
-      description: "Biometric liveness indicators are evaluated to identify presentation attacks.",
-      score: forensic.liveness,
-      status: forensic.liveness >= 90 ? "Passed" : "Review",
-      icon: UserRound,
-    },
+    { title: "Document Structure", description: "Layout, spacing and structural patterns are compared against expected document characteristics.", score: forensic.documentIntegrity, status: forensic.documentIntegrity >= 90 ? "Passed" : "Review", icon: FileCheck2 },
+    { title: "OCR Consistency", description: "Extracted text confidence and character-level consistency are evaluated for anomalies.", score: forensic.ocrAccuracy, status: forensic.ocrAccuracy >= 90 ? "Passed" : "Review", icon: FileSearch },
+    { title: "Face Match", description: "The detected face region is evaluated against available identity signals.", score: forensic.faceMatch, status: forensic.faceMatch >= 90 ? "Matched" : "Review", icon: Fingerprint },
+    { title: "Liveness Detection", description: "Liveness indicators are evaluated for possible presentation-attack signals.", score: forensic.liveness, status: forensic.liveness >= 90 ? "Passed" : "Review", icon: UserRound },
   ];
 
   const anomalyData = [
-    { name: "Image Tampering", value: forensic.tampering },
-    { name: "Text Anomaly", value: 6 },
-    { name: "Image Region", value: 8 },
-    { name: "Metadata", value: 4 },
+    { name: "Image Tampering", value: forensic.tampering, tone: "bg-red-400" },
+    { name: "Text Anomaly", value: 6, tone: "bg-amber-400" },
+    { name: "Image Region", value: 8, tone: "bg-cyan-400" },
+    { name: "Metadata", value: 4, tone: "bg-blue-400" },
   ];
 
   const anomalies = scanResult?.anomalies || [
@@ -1762,33 +1745,19 @@ function ForensicAnalysisPage({ scanResult, setActivePage, selectedFile }) {
     "Face region matches identity photo",
   ];
 
-  const riskLabel =
-    forensic.riskScore <= 20
-      ? "LOW RISK"
-      : forensic.riskScore <= 50
-      ? "MEDIUM RISK"
-      : "HIGH RISK";
-
-  const riskTone =
-    forensic.riskScore <= 20
-      ? "text-emerald-300 border-emerald-400/20 bg-emerald-400/5"
-      : forensic.riskScore <= 50
-      ? "text-amber-300 border-amber-400/20 bg-amber-400/5"
-      : "text-red-300 border-red-400/20 bg-red-400/5";
+  const riskLabel = forensic.riskScore <= 20 ? "LOW RISK" : forensic.riskScore <= 50 ? "MEDIUM RISK" : "HIGH RISK";
+  const riskTone = forensic.riskScore <= 20 ? "text-emerald-300 border-emerald-400/20 bg-emerald-400/5" : forensic.riskScore <= 50 ? "text-amber-300 border-amber-400/20 bg-amber-400/5" : "text-red-300 border-red-400/20 bg-red-400/5";
+  const selectedZone = zones.find((zone) => zone.name === activeZone) || zones[0];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-7">
+    <div className="mx-auto max-w-[1600px] space-y-7">
       <PageHeading
         eyebrow="AI FORENSIC ENGINE"
         title="Forensic Analysis"
-        description="Analyze document integrity, OCR consistency, biometric signals and potential manipulation indicators."
+        description="Inspect document regions, authenticity signals and potential manipulation indicators."
         action={
           <div className="flex flex-wrap items-center gap-2">
-            {demoMode && (
-              <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-[9px] font-bold tracking-wider text-amber-300">
-                DEMO DATA
-              </span>
-            )}
+            {demoMode && <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-[9px] font-bold tracking-wider text-amber-300">DEMO DATA</span>}
             <span className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-[9px] font-bold tracking-wider text-emerald-300">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
               ENGINE OPERATIONAL
@@ -1797,211 +1766,117 @@ function ForensicAnalysisPage({ scanResult, setActivePage, selectedFile }) {
         }
       />
 
-      {/* SCORE CARDS */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <ForensicScoreCard title="Document Integrity" value={forensic.documentIntegrity} icon={ShieldCheck} description="Structural consistency" />
-        <ForensicScoreCard title="OCR Accuracy" value={forensic.ocrAccuracy} icon={FileText} description="Text extraction confidence" />
-        <ForensicScoreCard title="Face Match" value={forensic.faceMatch} icon={Fingerprint} description="Biometric similarity" />
-        <ForensicScoreCard title="Liveness" value={forensic.liveness} icon={Activity} description="Presentation attack check" />
+        {findings.map((finding) => (
+          <ForensicScoreCard key={finding.title} title={finding.title} value={finding.score} icon={finding.icon} description={finding.description} />
+        ))}
       </div>
 
-      {/* MAIN WORKSPACE */}
-      <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
         <Panel className="overflow-hidden">
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-bold">Document Forensic View</p>
-              <p className="mt-1 text-xs text-slate-500">Visual region analysis and anomaly mapping</p>
+              <p className="text-sm font-bold">Interactive Forensic Workspace</p>
+              <p className="mt-1 text-xs text-slate-500">Select a region to inspect its current forensic confidence.</p>
             </div>
-            <span className="rounded-lg border border-cyan-400/20 bg-cyan-400/5 px-3 py-1.5 text-[9px] font-bold tracking-wider text-cyan-300">
-              AI HEATMAP
-            </span>
+            <div className="flex rounded-xl border border-white/10 bg-white/[0.02] p-1">
+              <button type="button" onClick={() => setViewMode("heatmap")} className={`rounded-lg px-3 py-1.5 text-[10px] font-bold ${viewMode === "heatmap" ? "bg-cyan-400/10 text-cyan-300" : "text-slate-500 hover:text-white"}`}>HEATMAP</button>
+              <button type="button" onClick={() => setViewMode("regions")} className={`rounded-lg px-3 py-1.5 text-[10px] font-bold ${viewMode === "regions" ? "bg-cyan-400/10 text-cyan-300" : "text-slate-500 hover:text-white"}`}>REGIONS</button>
+            </div>
           </div>
 
-          <div className="relative flex min-h-[430px] items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#020617] p-6">
-            <div
-              className="pointer-events-none absolute inset-0 opacity-20"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(34,211,238,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.12) 1px, transparent 1px)",
-                backgroundSize: "32px 32px",
-              }}
-            />
+          <div className="relative min-h-[470px] overflow-hidden rounded-2xl border border-white/10 bg-[#020617] p-5 sm:p-8">
+            <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: "linear-gradient(rgba(34,211,238,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.12) 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+            <div className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/5 blur-[100px]" />
 
-            <div className="relative z-10 w-full max-w-[560px] overflow-hidden rounded-xl border border-white/20 bg-slate-100 shadow-[0_0_55px_rgba(34,211,238,.12)]">
-              <div className="scan-line absolute left-0 right-0 h-[2px] bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,1)]" />
+            {viewMode === "heatmap" ? (
+              <div className="relative z-10 flex min-h-[390px] items-center justify-center">
+                <div className="relative w-full max-w-[590px] overflow-hidden rounded-2xl border border-white/20 bg-slate-100 shadow-[0_0_70px_rgba(34,211,238,.12)]">
+                  <div className="scan-line absolute left-0 right-0 h-[2px] bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,1)]" />
+                  <div className="p-5 text-slate-800 sm:p-7">
+                    <div className="flex items-center justify-between border-b border-slate-300 pb-4">
+                      <div>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Identity Document</p>
+                        <p className="mt-1 text-xl font-black">DOCUMENT PREVIEW</p>
+                      </div>
+                      <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-300"><UserRound size={30} className="text-slate-500" /></div>
+                    </div>
+                    <div className="mt-6 grid grid-cols-2 gap-5 text-sm">
+                      <div><p className="text-[9px] uppercase text-slate-400">Name</p><p className="mt-1 font-bold">{scanResult?.extractedData?.name || "SAMPLE USER"}</p></div>
+                      <div><p className="text-[9px] uppercase text-slate-400">Document No.</p><p className="mt-1 font-mono font-bold">{scanResult?.extractedData?.documentNumber || "XXXX XXXX 4821"}</p></div>
+                      <div><p className="text-[9px] uppercase text-slate-400">Document Type</p><p className="mt-1 font-bold">{scanResult?.extractedData?.documentType || "Aadhaar Card"}</p></div>
+                      <div><p className="text-[9px] uppercase text-slate-400">Analysis</p><p className="mt-1 font-bold text-emerald-600">{riskLabel}</p></div>
+                    </div>
+                    <div className="mt-8 grid grid-cols-3 gap-3"><div className="h-12 rounded bg-slate-200" /><div className="h-12 rounded bg-slate-200" /><div className="h-12 rounded bg-slate-200" /></div>
+                  </div>
 
-              <div className="p-6 text-slate-800">
-                <div className="flex items-center justify-between border-b border-slate-300 pb-4">
-                  <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Identity Document</p>
-                    <p className="mt-1 text-xl font-black">DOCUMENT PREVIEW</p>
-                  </div>
-                  <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-slate-300">
-                    <UserRound size={30} className="text-slate-500" />
-                  </div>
-                </div>
-
-                <div className="mt-6 grid grid-cols-2 gap-5 text-sm">
-                  <div>
-                    <p className="text-[9px] uppercase text-slate-400">Name</p>
-                    <p className="mt-1 font-bold">{scanResult?.extractedData?.name || "SAMPLE USER"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] uppercase text-slate-400">Document No.</p>
-                    <p className="mt-1 font-mono font-bold">{scanResult?.extractedData?.documentNumber || "XXXX XXXX 4821"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] uppercase text-slate-400">Document Type</p>
-                    <p className="mt-1 font-bold">{scanResult?.extractedData?.documentType || "Aadhaar Card"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[9px] uppercase text-slate-400">Status</p>
-                    <p className="mt-1 font-bold text-emerald-600">{scanResult?.status || "Verified"}</p>
-                  </div>
-                </div>
-
-                <div className="mt-8 grid grid-cols-3 gap-3">
-                  <div className="h-12 rounded bg-slate-200" />
-                  <div className="h-12 rounded bg-slate-200" />
-                  <div className="h-12 rounded bg-slate-200" />
+                  <button type="button" onClick={() => setActiveZone("Text Region")} className={`absolute left-[8%] top-[27%] h-14 w-[42%] rounded-lg border-2 ${activeZone === "Text Region" ? "border-cyan-300 bg-cyan-400/20 shadow-[0_0_20px_rgba(34,211,238,.25)]" : "border-cyan-400/60 bg-cyan-400/10"}`} aria-label="Inspect text region" />
+                  <button type="button" onClick={() => setActiveZone("Face Region")} className={`absolute right-[8%] top-[17%] h-20 w-20 rounded-full border-2 ${activeZone === "Face Region" ? "border-emerald-300 bg-emerald-400/20 shadow-[0_0_20px_rgba(52,211,153,.25)]" : "border-emerald-400/60 bg-emerald-400/10"}`} aria-label="Inspect face region" />
+                  <button type="button" onClick={() => setActiveZone("Document Structure")} className={`absolute left-[8%] bottom-[25%] h-12 w-[38%] rounded-lg border-2 ${activeZone === "Document Structure" ? "border-blue-300 bg-blue-400/20" : "border-blue-400/60 bg-blue-400/10"}`} aria-label="Inspect structure region" />
+                  <button type="button" onClick={() => setActiveZone("Signature / Mark")} className={`absolute right-[8%] bottom-[25%] h-12 w-[30%] rounded-lg border-2 ${activeZone === "Signature / Mark" ? "border-amber-300 bg-amber-400/20 shadow-[0_0_20px_rgba(245,158,11,.25)]" : "border-amber-400/60 bg-amber-400/10"}`} aria-label="Inspect signature region" />
                 </div>
               </div>
+            ) : (
+              <div className="relative z-10 grid min-h-[390px] gap-4 sm:grid-cols-2">
+                {zones.map((zone) => {
+                  const Icon = zone.icon;
+                  const selected = activeZone === zone.name;
+                  return (
+                    <button type="button" key={zone.name} onClick={() => setActiveZone(zone.name)} className={`rounded-2xl border p-5 text-left transition ${selected ? "border-cyan-400/40 bg-cyan-400/[0.08]" : "border-white/10 bg-white/[0.02] hover:border-white/20"}`}>
+                      <div className="flex items-center justify-between"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10"><Icon size={18} className="text-cyan-300" /></span><span className="text-xl font-black text-white">{zone.score}%</span></div>
+                      <p className="mt-5 text-sm font-bold text-white">{zone.name}</p>
+                      <p className="mt-1 text-xs text-slate-500">{zone.level} signal</p>
+                      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500" style={{ width: `${zone.score}%` }} /></div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
-              <div className="absolute left-[8%] top-[27%] h-14 w-[42%] rounded-lg border-2 border-cyan-400/70 bg-cyan-400/10" />
-              <div className="absolute right-[8%] top-[17%] h-20 w-20 rounded-full border-2 border-emerald-400/70 bg-emerald-400/10" />
-              <div className="absolute left-[8%] bottom-[25%] h-12 w-[38%] rounded-lg border-2 border-blue-400/70 bg-blue-400/10" />
-              <div className="absolute right-[8%] bottom-[25%] h-12 w-[30%] rounded-lg border-2 border-amber-400/70 bg-amber-400/10" />
-            </div>
-
-            <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-4 rounded-xl border border-white/10 bg-slate-950/85 px-4 py-3 backdrop-blur-xl">
+            <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-4 rounded-xl border border-white/10 bg-slate-950/90 px-4 py-3 backdrop-blur-xl">
               <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Heatmap Legend</span>
-              <HeatLegend label="Normal" type="normal" />
-              <HeatLegend label="Attention" type="attention" />
-              <HeatLegend label="Anomaly" type="danger" />
+              <HeatLegend label="Normal" type="normal" /><HeatLegend label="Attention" type="attention" /><HeatLegend label="Anomaly" type="danger" />
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-cyan-400/10 bg-cyan-400/[0.03] p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div><p className="text-[10px] uppercase tracking-widest text-slate-600">Selected Region</p><p className="mt-1 text-sm font-bold text-white">{selectedZone.name}</p></div>
+              <div className="text-right"><p className="text-2xl font-black text-cyan-300">{selectedZone.score}%</p><p className="text-[9px] uppercase tracking-wider text-slate-600">confidence</p></div>
             </div>
           </div>
         </Panel>
 
-        {/* RISK */}
         <div className="space-y-6">
           <Panel>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold">Forensic Risk</p>
-                <p className="mt-1 text-xs text-slate-500">Combined anomaly assessment</p>
-              </div>
-              <Shield size={19} className="text-cyan-400" />
-            </div>
-
-            <div className="mt-7 flex justify-center">
-              <div
-                className="relative flex h-44 w-44 items-center justify-center rounded-full"
-                style={{
-                  background: `conic-gradient(#22d3ee ${Math.min(forensic.riskScore, 100) * 3.6}deg, rgba(255,255,255,.05) 0deg)`,
-                }}
-              >
-                <div className="flex h-36 w-36 flex-col items-center justify-center rounded-full bg-[#07101f]">
-                  <span className="text-4xl font-black text-white">{forensic.riskScore}</span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Risk / 100</span>
-                </div>
-              </div>
-            </div>
-
-            <div className={`mt-6 rounded-xl border p-4 text-center ${riskTone}`}>
-              <p className="text-sm font-black">{riskLabel}</p>
-              <p className="mt-1 text-xs text-slate-400">
-                {forensic.riskScore <= 20 ? "No critical forensic indicators detected." : "Additional review is recommended."}
-              </p>
-            </div>
+            <div className="flex items-center justify-between"><div><p className="text-sm font-bold">Forensic Risk</p><p className="mt-1 text-xs text-slate-500">Combined anomaly assessment</p></div><Shield size={19} className="text-cyan-400" /></div>
+            <div className="mt-7 flex justify-center"><div className="relative flex h-44 w-44 items-center justify-center rounded-full" style={{ background: `conic-gradient(#22d3ee ${Math.min(forensic.riskScore, 100) * 3.6}deg, rgba(255,255,255,.05) 0deg)` }}><div className="flex h-36 w-36 flex-col items-center justify-center rounded-full bg-[#07101f]"><span className="text-4xl font-black text-white">{forensic.riskScore}</span><span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Risk / 100</span></div></div></div>
+            <div className={`mt-6 rounded-xl border p-4 text-center ${riskTone}`}><p className="text-sm font-black">{riskLabel}</p><p className="mt-1 text-xs text-slate-400">{forensic.riskScore <= 20 ? "No critical forensic indicators detected." : "Additional review is recommended."}</p></div>
           </Panel>
 
           <Panel>
-            <p className="text-sm font-bold">Anomaly Distribution</p>
-            <p className="mt-1 text-xs text-slate-500">Signal intensity across forensic checks</p>
-
-            <div className="mt-6 space-y-4">
-              {anomalyData.map((item) => (
-                <div key={item.name}>
-                  <div className="mb-2 flex justify-between text-xs">
-                    <span className="text-slate-400">{item.name}</span>
-                    <span className="font-bold text-white">{item.value}%</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white/5">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
-                      style={{ width: `${Math.min(item.value * 4, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-sm font-bold">Anomaly Distribution</p><p className="mt-1 text-xs text-slate-500">Signal intensity across forensic checks</p>
+            <div className="mt-6 space-y-4">{anomalyData.map((item) => (<div key={item.name}><div className="mb-2 flex justify-between text-xs"><span className="text-slate-400">{item.name}</span><span className="font-bold text-white">{item.value}%</span></div><div className="h-2 overflow-hidden rounded-full bg-white/5"><div className={`h-full rounded-full ${item.tone}`} style={{ width: `${Math.min(item.value * 4, 100)}%` }} /></div></div>))}</div>
           </Panel>
         </div>
       </div>
 
-      {/* FINDINGS */}
       <div>
-        <div className="mb-4">
-          <p className="text-lg font-bold">Forensic Findings</p>
-          <p className="mt-1 text-xs text-slate-500">Individual AI analysis modules</p>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {findings.map((finding) => (
-            <ForensicFindingCard key={finding.title} {...finding} />
-          ))}
-        </div>
+        <div className="mb-4"><p className="text-lg font-bold">Forensic Findings</p><p className="mt-1 text-xs text-slate-500">Individual analysis modules and confidence levels</p></div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{findings.map((finding) => (<ForensicFindingCard key={finding.title} {...finding} />))}</div>
       </div>
 
-      {/* ANOMALIES */}
       <Panel>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-bold">AI Anomaly Report</p>
-            <p className="mt-1 text-xs text-slate-500">Signals and observations generated during screening</p>
-          </div>
-          <AlertTriangle size={19} className="text-amber-400" />
-        </div>
-
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
-          {anomalies.map((item, index) => (
-            <div key={`${item}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-              <div className="flex items-start gap-3">
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10">
-                  <CheckCircle2 size={15} className="text-emerald-400" />
-                </div>
-                <p className="text-xs leading-5 text-slate-400">{item}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <div className="flex items-center justify-between"><div><p className="text-sm font-bold">AI Anomaly Report</p><p className="mt-1 text-xs text-slate-500">Signals and observations generated during screening</p></div><AlertTriangle size={19} className="text-amber-400" /></div>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">{anomalies.map((item, index) => (<div key={`${item}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.02] p-4"><div className="flex items-start gap-3"><div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10"><CheckCircle2 size={15} className="text-emerald-400" /></div><p className="text-xs leading-5 text-slate-400">{item}</p></div></div>))}</div>
       </Panel>
 
-      {/* ACTIONS */}
       <div className="flex flex-wrap gap-3">
-        <button
-          onClick={() => setActivePage("Document Upload")}
-          className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-xs font-black text-slate-950 transition hover:bg-cyan-300"
-        >
-          <UploadCloud size={16} />
-          Analyze Another Document
-        </button>
-
-        <button
-          onClick={() => setActivePage("Verification")}
-          className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-bold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
-        >
-          <ShieldCheck size={16} />
-          Open Verification
-        </button>
+        <button type="button" onClick={() => setActivePage("Document Upload")} className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-xs font-black text-slate-950 transition hover:bg-cyan-300"><UploadCloud size={16} />Analyze Another Document</button>
+        <button type="button" onClick={() => setActivePage("Verification")} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-bold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"><ShieldCheck size={16} />Open Verification</button>
       </div>
 
-      {selectedFile && (
-        <p className="text-[10px] text-slate-600">
-          Current file: {selectedFile.name}
-        </p>
-      )}
+      {selectedFile && <p className="text-[10px] text-slate-600">Current file: {selectedFile.name}</p>}
     </div>
   );
 }
