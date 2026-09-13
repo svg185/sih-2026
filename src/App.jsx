@@ -1589,280 +1589,54 @@ function VerificationPage({
 /* =========================
    RISK DASHBOARD
 ========================= */
+
 function RiskDashboard() {
-  const riskTrend = [
-    { day: "Mon", low: 38, medium: 8, high: 3 },
-    { day: "Tue", low: 46, medium: 11, high: 4 },
-    { day: "Wed", low: 42, medium: 7, high: 2 },
-    { day: "Thu", low: 55, medium: 13, high: 5 },
-    { day: "Fri", low: 61, medium: 9, high: 3 },
-    { day: "Sat", low: 48, medium: 12, high: 6 },
-    { day: "Sun", low: 67, medium: 10, high: 4 },
-  ];
-
-  const severityData = [
-    { name: "Low Risk", value: 71 },
-    { name: "Medium Risk", value: 19 },
-    { name: "High Risk", value: 10 },
-  ];
-
-  const highRiskCases = [
-    {
-      id: "CASE-1048",
-      document: "PAN_Card_Sample.pdf",
-      signal: "Image Tampering",
-      score: 31,
-      status: "Critical",
-    },
-    {
-      id: "CASE-1042",
-      document: "Passport_User02.jpg",
-      signal: "Face Mismatch",
-      score: 42,
-      status: "High",
-    },
-    {
-      id: "CASE-1037",
-      document: "DL_Verification_08.png",
-      signal: "Metadata Anomaly",
-      score: 48,
-      status: "High",
-    },
-  ];
-
   return (
     <div className="mx-auto max-w-7xl space-y-7">
       <PageHeading
         eyebrow="RISK INTELLIGENCE"
         title="Risk Dashboard"
-        description="Analyze fraud signals, risk severity and documents requiring investigation."
+        description="Analyze fraud signals and identify documents requiring investigation."
       />
 
-      {/* OVERVIEW CARDS */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <RiskOverviewCard
-          title="Overall Risk"
-          value="12"
-          suffix="/100"
-          description="Current platform risk"
-          icon={Gauge}
-          tone="cyan"
-        />
-
-        <RiskOverviewCard
+      <div className="grid gap-4 md:grid-cols-3">
+        <RiskCard
           title="Low Risk"
           value="71%"
-          description="912 documents"
-          icon={ShieldCheck}
+          count="912 documents"
           tone="green"
+          icon={ShieldCheck}
         />
 
-        <RiskOverviewCard
+        <RiskCard
           title="Medium Risk"
           value="19%"
-          description="244 documents"
-          icon={AlertTriangle}
+          count="244 documents"
           tone="yellow"
+          icon={AlertTriangle}
         />
 
-        <RiskOverviewCard
+        <RiskCard
           title="High Risk"
           value="10%"
-          description="128 documents"
-          icon={XCircle}
+          count="128 documents"
           tone="red"
+          icon={XCircle}
         />
       </div>
 
-      {/* RISK SUMMARY */}
-      <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <Panel className="relative overflow-hidden">
-          <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-cyan-400/5 blur-[90px]" />
-
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold">
-                  Overall Risk Assessment
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Current fraud exposure across screened documents
-                </p>
-              </div>
-
-              <Shield className="text-cyan-400" size={20} />
-            </div>
-
-            <div className="mt-7 grid gap-7 md:grid-cols-[220px_1fr] md:items-center">
-              {/* SCORE */}
-              <div className="flex justify-center">
-                <div className="relative flex h-48 w-48 items-center justify-center rounded-full border-[12px] border-emerald-400/10">
-                  <div
-                    className="absolute inset-[-12px] rounded-full"
-                    style={{
-                      background:
-                        "conic-gradient(#22d3ee 43deg, transparent 43deg)",
-                    }}
-                  />
-
-                  <div className="relative flex h-36 w-36 flex-col items-center justify-center rounded-full bg-[#07101f]">
-                    <span className="text-5xl font-black text-white">
-                      12
-                    </span>
-
-                    <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600">
-                      Risk / 100
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* SUMMARY */}
-              <div className="space-y-4">
-                <div className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.04] p-4">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2
-                      size={17}
-                      className="text-emerald-400"
-                    />
-
-                    <span className="text-sm font-bold text-emerald-300">
-                      Low Risk Environment
-                    </span>
-                  </div>
-
-                  <p className="mt-2 text-xs leading-5 text-slate-500">
-                    Current screening activity indicates a relatively low
-                    overall fraud exposure.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <MiniRiskStat
-                    label="Suspicious"
-                    value="142"
-                  />
-
-                  <MiniRiskStat
-                    label="Fake Detected"
-                    value="71"
-                  />
-
-                  <MiniRiskStat
-                    label="Under Review"
-                    value="28"
-                  />
-
-                  <MiniRiskStat
-                    label="Blocked"
-                    value="43"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </Panel>
-
-        {/* SEVERITY */}
+      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
         <Panel>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold">
-                Risk Severity
-              </p>
-
-              <p className="mt-1 text-xs text-slate-500">
-                Distribution across screened documents
-              </p>
-            </div>
-
-            <AlertTriangle
-              size={19}
-              className="text-amber-400"
-            />
+          <div className="mb-6">
+            <p className="text-sm font-bold">Risk Score Trend</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Suspicious and fake cases across screening activity
+            </p>
           </div>
 
-          <div className="mt-6 space-y-5">
-            {severityData.map((item) => (
-              <RiskSeverityRow
-                key={item.name}
-                name={item.name}
-                value={item.value}
-              />
-            ))}
-          </div>
-
-          <div className="mt-7 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500">
-                Total documents analyzed
-              </span>
-
-              <span className="text-sm font-black text-white">
-                1,284
-              </span>
-            </div>
-          </div>
-        </Panel>
-      </div>
-
-      {/* TREND + FACTORS */}
-      <div className="grid gap-5 xl:grid-cols-[1.55fr_0.75fr]">
-        <Panel>
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-bold">
-                Risk Activity Trend
-              </p>
-
-              <p className="mt-1 text-xs text-slate-500">
-                Risk severity observed over the last 7 days
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 text-[10px]">
-              <LegendDot
-                color="bg-emerald-400"
-                label="Low"
-              />
-
-              <LegendDot
-                color="bg-amber-400"
-                label="Medium"
-              />
-
-              <LegendDot
-                color="bg-red-400"
-                label="High"
-              />
-            </div>
-          </div>
-
-          <div className="h-[320px]">
+          <div className="h-[310px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={riskTrend}>
-                <defs>
-                  <linearGradient
-                    id="riskLowGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="0%"
-                      stopColor="#22c55e"
-                      stopOpacity={0.22}
-                    />
-
-                    <stop
-                      offset="100%"
-                      stopColor="#22c55e"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-
+              <BarChart data={activityData}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="rgba(255,255,255,.05)"
@@ -1870,19 +1644,13 @@ function RiskDashboard() {
 
                 <XAxis
                   dataKey="day"
-                  tick={{
-                    fill: "#64748b",
-                    fontSize: 11,
-                  }}
+                  tick={{ fill: "#64748b", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
 
                 <YAxis
-                  tick={{
-                    fill: "#64748b",
-                    fontSize: 11,
-                  }}
+                  tick={{ fill: "#64748b", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -1890,318 +1658,42 @@ function RiskDashboard() {
                 <Tooltip
                   contentStyle={{
                     background: "#0b1224",
-                    border:
-                      "1px solid rgba(255,255,255,.1)",
+                    border: "1px solid rgba(255,255,255,.1)",
                     borderRadius: 12,
                     fontSize: 12,
-                    color: "#fff",
                   }}
                 />
 
-                <Area
-                  type="monotone"
-                  dataKey="low"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  fill="url(#riskLowGradient)"
+                <Bar
+                  dataKey="suspicious"
+                  fill="#f59e0b"
+                  radius={[5, 5, 0, 0]}
                 />
 
-                <Area
-                  type="monotone"
-                  dataKey="medium"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  fill="transparent"
+                <Bar
+                  dataKey="fake"
+                  fill="#ef4444"
+                  radius={[5, 5, 0, 0]}
                 />
-
-                <Area
-                  type="monotone"
-                  dataKey="high"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  fill="transparent"
-                />
-              </AreaChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </Panel>
 
         <Panel>
-          <div>
-            <p className="text-sm font-bold">
-              Risk Factors
-            </p>
+          <p className="text-sm font-bold">Risk Factors</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Most common suspicious signals
+          </p>
 
-            <p className="mt-1 text-xs text-slate-500">
-              Most frequently detected suspicious signals
-            </p>
-          </div>
-
-          <div className="mt-7 space-y-5">
-            <RiskFactor
-              title="Image Tampering"
-              value={78}
-            />
-
-            <RiskFactor
-              title="Font Inconsistency"
-              value={61}
-            />
-
-            <RiskFactor
-              title="Face Mismatch"
-              value={44}
-            />
-
-            <RiskFactor
-              title="Metadata Anomaly"
-              value={37}
-            />
-
-            <RiskFactor
-              title="OCR Structure Issue"
-              value={24}
-            />
+          <div className="mt-6 space-y-5">
+            <RiskFactor title="Image Tampering" value={78} />
+            <RiskFactor title="Font Inconsistency" value={61} />
+            <RiskFactor title="Face Mismatch" value={44} />
+            <RiskFactor title="Metadata Anomaly" value={37} />
+            <RiskFactor title="OCR Structure Issue" value={24} />
           </div>
         </Panel>
-      </div>
-
-      {/* INVESTIGATION QUEUE */}
-      <Panel>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-bold">
-              High-Risk Investigation Queue
-            </p>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Documents requiring manual security review
-            </p>
-          </div>
-
-          <div className="rounded-full border border-red-400/20 bg-red-400/[0.05] px-3 py-1.5 text-[9px] font-bold tracking-wider text-red-300">
-            3 PRIORITY CASES
-          </div>
-        </div>
-
-        <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[700px]">
-            <thead>
-              <tr className="border-b border-white/10 text-left">
-                <th className="pb-3 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                  Case
-                </th>
-
-                <th className="pb-3 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                  Document
-                </th>
-
-                <th className="pb-3 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                  Primary Signal
-                </th>
-
-                <th className="pb-3 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                  Risk
-                </th>
-
-                <th className="pb-3 text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                  Status
-                </th>
-
-                <th className="pb-3 text-right text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                  Action
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {highRiskCases.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-white/5 last:border-0"
-                >
-                  <td className="py-4 font-mono text-xs text-cyan-300">
-                    {item.id}
-                  </td>
-
-                  <td className="py-4 text-xs font-semibold text-white">
-                    {item.document}
-                  </td>
-
-                  <td className="py-4 text-xs text-slate-400">
-                    {item.signal}
-                  </td>
-
-                  <td className="py-4">
-                    <span className="font-bold text-red-400">
-                      {item.score}/100
-                    </span>
-                  </td>
-
-                  <td className="py-4">
-                    <span
-                      className={`rounded-full border px-2.5 py-1 text-[9px] font-bold ${
-                        item.status === "Critical"
-                          ? "border-red-400/20 bg-red-400/5 text-red-300"
-                          : "border-amber-400/20 bg-amber-400/5 text-amber-300"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-
-                  <td className="py-4 text-right">
-                    <button
-                      type="button"
-                      className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-[10px] font-bold text-slate-300 transition hover:bg-white/[0.07] hover:text-white"
-                    >
-                      Review
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
-
-      {/* SECURITY NOTICE */}
-      <div className="flex items-start gap-3 rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.025] p-4">
-        <ShieldCheck
-          size={18}
-          className="mt-0.5 shrink-0 text-cyan-400"
-        />
-
-        <div>
-          <p className="text-xs font-bold text-white">
-            Risk Engine Monitoring Active
-          </p>
-
-          <p className="mt-1 text-[10px] leading-5 text-slate-600">
-            Risk scores shown here are currently based on the frontend
-            demonstration dataset. Once the AI backend is connected,
-            these values will be populated from real screening results.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function RiskOverviewCard({
-  title,
-  value,
-  suffix,
-  description,
-  icon: Icon,
-  tone,
-}) {
-  const tones = {
-    cyan: {
-      icon: "bg-cyan-400/10 text-cyan-300",
-      value: "text-cyan-300",
-    },
-    green: {
-      icon: "bg-emerald-400/10 text-emerald-300",
-      value: "text-emerald-300",
-    },
-    yellow: {
-      icon: "bg-amber-400/10 text-amber-300",
-      value: "text-amber-300",
-    },
-    red: {
-      icon: "bg-red-400/10 text-red-300",
-      value: "text-red-300",
-    },
-  };
-
-  const style = tones[tone] || tones.cyan;
-
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-white/15 hover:bg-white/[0.045]">
-      <div className="flex items-start justify-between">
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${style.icon}`}
-        >
-          <Icon size={19} />
-        </div>
-
-        <div className="text-right">
-          <div
-            className={`text-2xl font-black ${style.value}`}
-          >
-            {value}
-            {suffix && (
-              <span className="text-xs text-slate-600">
-                {suffix}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <p className="mt-5 text-sm font-bold text-white">
-        {title}
-      </p>
-
-      <p className="mt-1 text-xs text-slate-500">
-        {description}
-      </p>
-    </div>
-  );
-}
-
-function MiniRiskStat({ label, value }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
-      <p className="text-[10px] text-slate-600">
-        {label}
-      </p>
-
-      <p className="mt-1 text-lg font-black text-white">
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function RiskSeverityRow({ name, value }) {
-  const isLow = name === "Low Risk";
-  const isMedium = name === "Medium Risk";
-
-  const barClass = isLow
-    ? "from-emerald-400 to-green-500"
-    : isMedium
-      ? "from-amber-400 to-yellow-500"
-      : "from-red-400 to-rose-500";
-
-  const dotClass = isLow
-    ? "bg-emerald-400"
-    : isMedium
-      ? "bg-amber-400"
-      : "bg-red-400";
-
-  return (
-    <div>
-      <div className="mb-2 flex items-center gap-2">
-        <span
-          className={`h-2 w-2 rounded-full ${dotClass}`}
-        />
-
-        <span className="flex-1 text-xs text-slate-400">
-          {name}
-        </span>
-
-        <span className="text-xs font-black text-white">
-          {value}%
-        </span>
-      </div>
-
-      <div className="h-2 overflow-hidden rounded-full bg-white/5">
-        <div
-          className={`h-full rounded-full bg-gradient-to-r ${barClass}`}
-          style={{ width: `${value}%` }}
-        />
       </div>
     </div>
   );
@@ -2616,88 +2108,395 @@ function HeatLegend({ label, type }) {
 ========================= */
 
 function InvestigationPage({ history }) {
+  const [selectedCase, setSelectedCase] = useState(null);
+
+  const cases = history
+    .filter((item) => item.status !== "Verified")
+    .map((item, index) => ({
+      ...item,
+      caseId: `CASE-${1048 - index * 7}`,
+      risk: Math.max(1, 100 - item.score),
+      priority: item.status === "Fake Detected" ? "Critical" : "High",
+      signal:
+        item.status === "Fake Detected"
+          ? "Image Tampering"
+          : "Face / Document Anomaly",
+      analyst: index === 0 ? "Unassigned" : "Security Analyst",
+    }));
+
+  const openCases = cases.length;
+  const criticalCases = cases.filter((item) => item.priority === "Critical").length;
+  const highCases = cases.filter((item) => item.priority === "High").length;
+
   return (
     <div className="mx-auto max-w-7xl space-y-7">
       <PageHeading
         eyebrow="CASE MANAGEMENT"
         title="Investigation Center"
-        description="Review suspicious screening cases and prioritize manual investigation."
+        description="Review suspicious screening cases, inspect evidence and prioritize manual investigation."
+        action={
+          <div className="flex items-center gap-2 rounded-full border border-cyan-400/15 bg-cyan-400/[0.04] px-3 py-2">
+            <Activity size={14} className="text-cyan-300" />
+            <span className="text-[9px] font-bold tracking-wider text-cyan-300">
+              LIVE CASE QUEUE
+            </span>
+          </div>
+        }
       />
 
+      {/* CASE SUMMARY */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <InvestigationStat
+          title="Open Cases"
+          value={openCases}
+          description="Awaiting analyst review"
+          icon={FolderSearch}
+          tone="cyan"
+        />
+
+        <InvestigationStat
+          title="Critical Cases"
+          value={criticalCases}
+          description="Immediate attention"
+          icon={XCircle}
+          tone="red"
+        />
+
+        <InvestigationStat
+          title="High Priority"
+          value={highCases}
+          description="Elevated risk cases"
+          icon={AlertTriangle}
+          tone="yellow"
+        />
+
+        <InvestigationStat
+          title="Evidence Sources"
+          value="06"
+          description="AI signals available"
+          icon={Database}
+          tone="green"
+        />
+      </div>
+
+      {/* QUEUE */}
       <Panel>
-        <div className="mb-5 flex items-center justify-between">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-bold">Investigation Queue</p>
             <p className="mt-1 text-xs text-slate-500">
-              Documents requiring analyst attention
+              Suspicious and fake documents requiring analyst attention
             </p>
           </div>
 
           <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-3 py-1.5 text-[10px] font-bold text-amber-300">
-            12 OPEN CASES
+            {openCases} OPEN CASES
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] text-left">
-            <thead>
-              <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-slate-600">
-                <th className="px-4 py-3">Document</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Risk</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Action</th>
-              </tr>
-            </thead>
+        {cases.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-12 text-center">
+            <CheckCircle2 className="mx-auto text-emerald-400" size={35} />
+            <p className="mt-4 text-sm font-bold text-white">
+              No active investigation cases
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              All currently screened documents are marked as verified.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px] text-left">
+              <thead>
+                <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-slate-600">
+                  <th className="px-4 py-3">Case</th>
+                  <th className="px-4 py-3">Document</th>
+                  <th className="px-4 py-3">Signal</th>
+                  <th className="px-4 py-3">Risk</th>
+                  <th className="px-4 py-3">Priority</th>
+                  <th className="px-4 py-3">Analyst</th>
+                  <th className="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {history
-                .filter((x) => x.status !== "Verified")
-                .map((item) => (
+              <tbody>
+                {cases.map((item) => (
                   <tr
                     key={item.id}
-                    className="border-b border-white/5 last:border-0"
+                    className="border-b border-white/5 last:border-0 transition hover:bg-white/[0.02]"
                   >
+                    <td className="px-4 py-4 font-mono text-xs text-cyan-300">
+                      {item.caseId}
+                    </td>
+
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-400/10">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-400/10">
                           <FileText size={16} className="text-red-300" />
                         </div>
-
-                        <span className="text-xs font-semibold">
-                          {item.file}
-                        </span>
+                        <div className="min-w-0">
+                          <p className="max-w-[190px] truncate text-xs font-semibold text-white">
+                            {item.file}
+                          </p>
+                          <p className="mt-0.5 text-[9px] text-slate-600">
+                            {item.type}
+                          </p>
+                        </div>
                       </div>
                     </td>
 
-                    <td className="px-4 py-4 text-xs text-slate-400">
-                      {item.type}
-                    </td>
-
                     <td className="px-4 py-4">
-                      <span className="text-xs font-bold text-red-300">
-                        {100 - item.score}/100
+                      <span className="text-xs text-slate-400">
+                        {item.signal}
                       </span>
                     </td>
 
                     <td className="px-4 py-4">
-                      <StatusBadge status={item.status} />
+                      <span className="text-xs font-black text-red-300">
+                        {item.risk}/100
+                      </span>
                     </td>
 
                     <td className="px-4 py-4">
+                      <CasePriorityBadge priority={item.priority} />
+                    </td>
+
+                    <td className="px-4 py-4 text-xs text-slate-500">
+                      {item.analyst}
+                    </td>
+
+                    <td className="px-4 py-4 text-right">
                       <button
                         type="button"
-                        className="rounded-lg border border-white/10 px-3 py-2 text-[10px] font-bold text-slate-300 hover:bg-white/5"
+                        onClick={() => setSelectedCase(item)}
+                        className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[10px] font-bold text-slate-300 transition hover:border-cyan-400/20 hover:bg-cyan-400/[0.05] hover:text-cyan-300"
                       >
-                        Review
+                        Review Case
                       </button>
                     </td>
                   </tr>
                 ))}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+        )}
       </Panel>
+
+      {/* CASE DETAIL */}
+      {selectedCase && (
+        <Panel className="overflow-hidden border-cyan-400/15">
+          <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-sm font-black text-cyan-300">
+                  {selectedCase.caseId}
+                </span>
+                <CasePriorityBadge priority={selectedCase.priority} />
+              </div>
+              <p className="mt-2 text-lg font-bold text-white">
+                {selectedCase.file}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Investigation detail and AI-generated evidence summary
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedCase(null)}
+              className="self-start rounded-lg border border-white/10 p-2 text-slate-500 transition hover:bg-white/5 hover:text-white sm:self-auto"
+              aria-label="Close case details"
+            >
+              <X size={17} />
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+            <div className="space-y-4">
+              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                  Case Risk
+                </p>
+
+                <div className="mt-4 flex items-end gap-2">
+                  <span className="text-4xl font-black text-red-300">
+                    {selectedCase.risk}
+                  </span>
+                  <span className="mb-1 text-xs text-slate-600">
+                    / 100
+                  </span>
+                </div>
+
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500"
+                    style={{ width: `${selectedCase.risk}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                  Document Details
+                </p>
+
+                <div className="mt-5 space-y-4">
+                  <InvestigationDetail
+                    label="Document Type"
+                    value={selectedCase.type}
+                  />
+                  <InvestigationDetail
+                    label="Screening Score"
+                    value={`${selectedCase.score}%`}
+                  />
+                  <InvestigationDetail
+                    label="Primary Signal"
+                    value={selectedCase.signal}
+                  />
+                  <InvestigationDetail
+                    label="Current Status"
+                    value={selectedCase.status}
+                  />
+                  <InvestigationDetail
+                    label="Assigned Analyst"
+                    value={selectedCase.analyst}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-white">
+                    Evidence & AI Signals
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Signals that contributed to the investigation priority
+                  </p>
+                </div>
+                <BrainCircuit size={20} className="text-cyan-300" />
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <EvidenceSignal
+                  icon={FileSearch}
+                  title="Visual Manipulation Analysis"
+                  value="Elevated"
+                  description="Image and layout regions require additional review."
+                  danger
+                />
+
+                <EvidenceSignal
+                  icon={FileText}
+                  title="OCR Consistency"
+                  value="Review"
+                  description="Extracted text should be compared against trusted records."
+                />
+
+                <EvidenceSignal
+                  icon={Fingerprint}
+                  title="Biometric Signal"
+                  value={selectedCase.status === "Fake Detected" ? "Mismatch Risk" : "Attention"}
+                  description="Biometric evidence should be validated before final disposition."
+                  danger={selectedCase.status === "Fake Detected"}
+                />
+
+                <EvidenceSignal
+                  icon={Database}
+                  title="External Identity Check"
+                  value="Pending"
+                  description="External database verification is not connected in demo mode."
+                />
+              </div>
+
+              <div className="mt-5 rounded-xl border border-amber-400/10 bg-amber-400/[0.035] p-4">
+                <div className="flex gap-3">
+                  <AlertTriangle size={17} className="mt-0.5 shrink-0 text-amber-400" />
+                  <div>
+                    <p className="text-xs font-bold text-amber-300">
+                      Analyst Recommendation
+                    </p>
+                    <p className="mt-1 text-[10px] leading-5 text-slate-500">
+                      Review the highlighted document regions and verify identity
+                      information against trusted backend sources before closing the case.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Panel>
+      )}
+    </div>
+  );
+}
+
+function InvestigationStat({ title, value, description, icon: Icon, tone }) {
+  const tones = {
+    cyan: "bg-cyan-400/10 text-cyan-300",
+    green: "bg-emerald-400/10 text-emerald-300",
+    yellow: "bg-amber-400/10 text-amber-300",
+    red: "bg-red-400/10 text-red-300",
+  };
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:bg-white/[0.045]">
+      <div className="flex items-start justify-between">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tones[tone] || tones.cyan}`}>
+          <Icon size={19} />
+        </div>
+        <span className="text-2xl font-black text-white">{value}</span>
+      </div>
+      <p className="mt-5 text-sm font-bold text-white">{title}</p>
+      <p className="mt-1 text-xs text-slate-500">{description}</p>
+    </div>
+  );
+}
+
+function CasePriorityBadge({ priority }) {
+  const critical = priority === "Critical";
+
+  return (
+    <span
+      className={`rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider ${
+        critical
+          ? "border-red-400/20 bg-red-400/5 text-red-300"
+          : "border-amber-400/20 bg-amber-400/5 text-amber-300"
+      }`}
+    >
+      {priority}
+    </span>
+  );
+}
+
+function InvestigationDetail({ label, value }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-white/5 pb-3 last:border-0 last:pb-0">
+      <span className="text-[10px] text-slate-600">{label}</span>
+      <span className="max-w-[60%] truncate text-right text-[10px] font-bold text-slate-300">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function EvidenceSignal({ icon: Icon, title, value, description, danger = false }) {
+  return (
+    <div className="flex gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-4">
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${danger ? "bg-red-400/10" : "bg-cyan-400/10"}`}>
+        <Icon size={16} className={danger ? "text-red-300" : "text-cyan-300"} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs font-bold text-white">{title}</p>
+          <span className={`text-[9px] font-bold ${danger ? "text-red-300" : "text-cyan-300"}`}>
+            {value}
+          </span>
+        </div>
+        <p className="mt-1 text-[10px] leading-5 text-slate-600">{description}</p>
+      </div>
     </div>
   );
 }
