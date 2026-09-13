@@ -1,9 +1,130 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Bell,
+  BrainCircuit,
+  CheckCircle2,
+  ChevronRight,
+  Clock3,
+  Database,
+  FileCheck2,
+  FileSearch,
+  FileText,
+  Fingerprint,
+  FolderSearch,
+  Gauge,
+  History,
+  LayoutDashboard,
+  LockKeyhole,
+  Menu,
+  Search,
+  Settings,
+  Shield,
+  ShieldCheck,
+  Sparkles,
+  UploadCloud,
+  UserRound,
+  Users,
+  X,
+  XCircle,
+  Zap,
+} from "lucide-react";
+
+const historyData = [
+  {
+    id: 1,
+    file: "Aadhaar_Card_01.pdf",
+    type: "Aadhaar",
+    status: "Verified",
+    score: 96,
+    time: "2 min ago",
+  },
+  {
+    id: 2,
+    file: "Passport_User02.jpg",
+    type: "Passport",
+    status: "Suspicious",
+    score: 68,
+    time: "18 min ago",
+  },
+  {
+    id: 3,
+    file: "Driving_License.png",
+    type: "Driving License",
+    status: "Verified",
+    score: 92,
+    time: "42 min ago",
+  },
+  {
+    id: 4,
+    file: "PAN_Card_Sample.pdf",
+    type: "PAN Card",
+    status: "Fake Detected",
+    score: 31,
+    time: "1 hr ago",
+  },
+  {
+    id: 5,
+    file: "Passport_03.pdf",
+    type: "Passport",
+    status: "Verified",
+    score: 94,
+    time: "2 hrs ago",
+  },
+];
+
+const activityData = [
+  { day: "Mon", verified: 38, suspicious: 8, fake: 3 },
+  { day: "Tue", verified: 46, suspicious: 11, fake: 4 },
+  { day: "Wed", verified: 42, suspicious: 7, fake: 2 },
+  { day: "Thu", verified: 55, suspicious: 13, fake: 5 },
+  { day: "Fri", verified: 61, suspicious: 9, fake: 3 },
+  { day: "Sat", verified: 48, suspicious: 12, fake: 6 },
+  { day: "Sun", verified: 67, suspicious: 10, fake: 4 },
+];
+
+const riskData = [
+  { name: "Low Risk", value: 71 },
+  { name: "Medium Risk", value: 19 },
+  { name: "High Risk", value: 10 },
+];
+
+const COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
+
+const menuItems = [
+  { name: "Dashboard", icon: LayoutDashboard },
+  { name: "Document Upload", icon: UploadCloud },
+  { name: "Verification", icon: ShieldCheck },
+  { name: "Risk Dashboard", icon: Gauge },
+  { name: "Forensic Analysis", icon: FileSearch },
+  { name: "Investigation", icon: FolderSearch },
+];
+
+const bottomItems = [
+  { name: "Audit Logs", icon: History },
+  { name: "Settings", icon: Settings },
+];
 
 function App() {
-  // =========================================
-  // STATES
-  // =========================================
+  const [activePage, setActivePage] = useState("Dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -11,62 +132,23 @@ function App() {
   const [scanResult, setScanResult] = useState(null);
   const [error, setError] = useState("");
 
-  // Search + Filter
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
-  // =========================================
-  // SCREENING HISTORY
-  // =========================================
+  const [history, setHistory] = useState(historyData);
 
-  const [history, setHistory] = useState([
-    {
-      id: 1,
-      name: "Aadhaar_Card_01.pdf",
-      type: "PDF",
-      status: "Verified",
-      score: 96,
-      date: "12 Sep 2026, 03:42 PM",
-    },
-    {
-      id: 2,
-      name: "Passport_User02.jpg",
-      type: "JPG",
-      status: "Suspicious",
-      score: 68,
-      date: "12 Sep 2026, 02:18 PM",
-    },
-    {
-      id: 3,
-      name: "Driving_License.png",
-      type: "PNG",
-      status: "Verified",
-      score: 92,
-      date: "12 Sep 2026, 01:05 PM",
-    },
-    {
-      id: 4,
-      name: "PAN_Card_Sample.pdf",
-      type: "PDF",
-      status: "Fake Detected",
-      score: 31,
-      date: "11 Sep 2026, 06:27 PM",
-    },
-  ]);
+  const filteredHistory = useMemo(() => {
+    return history.filter((item) => {
+      const matchesSearch = item.file
+        .toLowerCase()
+        .includes(search.toLowerCase());
 
-  // =========================================
-  // ALLOWED FILE TYPES
-  // =========================================
+      const matchesFilter =
+        filter === "All" ? true : item.status === filter;
 
-  const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "application/pdf",
-  ];
-
-  // =========================================
-  // FILE HANDLING
-  // =========================================
+      return matchesSearch && matchesFilter;
+    });
+  }, [history, search, filter]);
 
   const handleFile = (file) => {
     setError("");
@@ -74,15 +156,17 @@ function App() {
 
     if (!file) return;
 
-    // File type validation
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "application/pdf",
+    ];
+
     if (!allowedTypes.includes(file.type)) {
-      setError(
-        "Invalid file format. Please upload JPG, PNG or PDF."
-      );
+      setError("Only JPG, PNG and PDF files are supported.");
       return;
     }
 
-    // File size validation
     if (file.size > 10 * 1024 * 1024) {
       setError("File size must be less than 10 MB.");
       return;
@@ -91,46 +175,28 @@ function App() {
     setSelectedFile(file);
   };
 
-  const handleFileChange = (event) => {
-    handleFile(event.target.files[0]);
+  const handleFileChange = (e) => {
+    handleFile(e.target.files?.[0]);
   };
 
-  const handleDrop = (event) => {
-    event.preventDefault();
+  const handleDrop = (e) => {
+    e.preventDefault();
     setIsDragging(false);
-
-    const file = event.dataTransfer.files[0];
-    handleFile(file);
+    handleFile(e.dataTransfer.files?.[0]);
   };
-
-  // =========================================
-  // START AI SCREENING
-  // =========================================
 
   const startScreening = () => {
-    if (!selectedFile) {
-      setError("Please select a document first.");
-      return;
-    }
+    if (!selectedFile || isScanning) return;
 
-    setError("");
     setIsScanning(true);
     setScanResult(null);
 
-    // Demo AI screening simulation
     setTimeout(() => {
-      setIsScanning(false);
-
-      // =====================================
-      // DEMO FORENSIC RESULT
-      // =====================================
-
       const result = {
         status: "Verified",
         score: 94,
         message:
           "Document passed initial AI-based authenticity screening.",
-
         forensic: {
           documentIntegrity: 96,
           ocrAccuracy: 98,
@@ -139,7 +205,6 @@ function App() {
           tampering: 8,
           riskScore: 12,
         },
-
         extractedData: {
           documentType: "Aadhaar Card",
           documentNumber: "XXXX XXXX 4821",
@@ -147,7 +212,6 @@ function App() {
           dob: "15 Aug 2004",
           gender: "Male",
         },
-
         anomalies: [
           "No visible document alteration detected",
           "OCR text structure is consistent",
@@ -156,1615 +220,1806 @@ function App() {
       };
 
       setScanResult(result);
+      setIsScanning(false);
 
-      // =====================================
-      // ADD TO SCREENING HISTORY
-      // =====================================
-
-      const extension =
-        selectedFile.name.split(".").pop()?.toUpperCase() ||
-        "FILE";
-
-      const newHistory = {
+      const newRecord = {
         id: Date.now(),
-        name: selectedFile.name,
-        type: extension,
+        file: selectedFile.name,
+        type: result.extractedData.documentType,
         status: result.status,
         score: result.score,
-        date: new Date().toLocaleString("en-IN", {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        time: "Just now",
       };
 
-      setHistory((previousHistory) => [
-        newHistory,
-        ...previousHistory,
-      ]);
-    }, 2000);
+      setHistory((prev) => [newRecord, ...prev]);
+    }, 2200);
   };
 
-  // =========================================
-  // REMOVE FILE
-  // =========================================
-
-  const removeFile = () => {
-    setSelectedFile(null);
-    setScanResult(null);
-    setError("");
+  const navigate = (page) => {
+    setActivePage(page);
+    setSidebarOpen(false);
   };
-
-  // =========================================
-  // SEARCH + FILTER
-  // =========================================
-
-  const filteredHistory = history.filter((item) => {
-    const matchesSearch = item.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-
-    const matchesFilter =
-      filter === "All" || item.status === filter;
-
-    return matchesSearch && matchesFilter;
-  });
-
-  // =========================================
-  // UI
-  // =========================================
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[#050816] text-white">
+      <BackgroundGlow />
 
-    {/* =====================================
-    SIDEBAR NAVIGATION
-===================================== */}
+      <Sidebar
+        activePage={activePage}
+        navigate={navigate}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
 
-<aside className="fixed left-0 top-0 z-50 hidden h-screen w-64 border-r border-slate-800 bg-slate-900 lg:block">
+      <div className="lg:ml-[270px] min-h-screen relative">
+        <Header
+          activePage={activePage}
+          setSidebarOpen={setSidebarOpen}
+          search={search}
+          setSearch={setSearch}
+        />
 
-  {/* LOGO */}
+        <main className="p-4 sm:p-6 lg:p-8">
+          {activePage === "Dashboard" && (
+            <Dashboard
+              navigate={navigate}
+              history={filteredHistory}
+              scanResult={scanResult}
+            />
+          )}
 
-  <div className="border-b border-slate-800 p-6">
+          {activePage === "Document Upload" && (
+            <UploadPage
+              selectedFile={selectedFile}
+              setSelectedFile={setSelectedFile}
+              isDragging={isDragging}
+              setIsDragging={setIsDragging}
+              handleDrop={handleDrop}
+              handleFileChange={handleFileChange}
+              startScreening={startScreening}
+              isScanning={isScanning}
+              error={error}
+              scanResult={scanResult}
+            />
+          )}
 
-    <div className="flex items-center gap-3">
+          {activePage === "Verification" && (
+            <VerificationPage
+              scanResult={scanResult}
+              navigate={navigate}
+              selectedFile={selectedFile}
+              startScreening={startScreening}
+              isScanning={isScanning}
+            />
+          )}
 
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-xl shadow-lg shadow-blue-500/20">
-        🛡️
+          {activePage === "Risk Dashboard" && <RiskDashboard />}
+
+          {activePage === "Forensic Analysis" && (
+            <ForensicPage scanResult={scanResult} />
+          )}
+
+          {activePage === "Investigation" && (
+            <InvestigationPage history={history} />
+          )}
+
+          {activePage === "Audit Logs" && (
+            <AuditLogs history={history} />
+          )}
+
+          {activePage === "Settings" && <SettingsPage />}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+/* =========================
+   BACKGROUND
+========================= */
+
+function BackgroundGlow() {
+  return (
+    <>
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px]" />
+        <div className="absolute right-0 top-1/3 h-96 w-96 rounded-full bg-blue-600/10 blur-[120px]" />
+        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-purple-600/10 blur-[120px]" />
       </div>
 
-      <div>
-        <h2 className="font-bold text-white">
-          AI Shield
-        </h2>
+      <div
+        className="pointer-events-none fixed inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+      />
+    </>
+  );
+}
 
-        <p className="text-xs text-slate-500">
-          Identity Security
-        </p>
-      </div>
+/* =========================
+   SIDEBAR
+========================= */
 
-    </div>
+function Sidebar({
+  activePage,
+  navigate,
+  sidebarOpen,
+  setSidebarOpen,
+}) {
+  return (
+    <>
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-  </div>
-
-  {/* NAVIGATION */}
-
-  <nav className="p-4">
-
-    <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
-      Main Menu
-    </p>
-
-    <div className="space-y-1">
-
-      {/* Dashboard */}
-
-      <button
-        className="flex w-full items-center gap-3 rounded-xl bg-blue-600/10 px-3 py-3 text-left text-sm font-medium text-blue-400"
+      <aside
+        className={`fixed left-0 top-0 z-50 flex h-screen w-[270px] flex-col border-r border-white/10 bg-[#080d1d]/95 backdrop-blur-xl transition-transform duration-300 lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
-        <span className="text-lg">🏠</span>
-        <span>Dashboard</span>
-      </button>
+        <div className="flex h-[78px] items-center justify-between border-b border-white/10 px-6">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10 ring-1 ring-cyan-400/30">
+              <Shield className="h-5 w-5 text-cyan-300" />
+              <div className="absolute inset-0 rounded-xl bg-cyan-400/10 blur-lg" />
+            </div>
 
-      {/* Upload */}
-
-      <button
-        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
-      >
-        <span className="text-lg">📤</span>
-        <span>Document Upload</span>
-      </button>
-
-      {/* Verification */}
-
-      <button
-        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
-      >
-        <span className="text-lg">✅</span>
-        <span>Verification</span>
-      </button>
-
-      {/* Risk */}
-
-      <button
-        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
-      >
-        <span className="text-lg">📊</span>
-        <span>Risk Dashboard</span>
-      </button>
-
-      {/* Forensic */}
-
-      <button
-        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
-      >
-        <span className="text-lg">🔬</span>
-        <span>Forensic Analysis</span>
-      </button>
-
-      {/* Investigation */}
-
-      <button
-        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white"
-      >
-        <span className="text-lg">🕵️</span>
-        <span>Investigation</span>
-      </button>
-
-    </div>
-
-    {/* SYSTEM */}
-
-    <p className="mb-3 mt-8 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
-      System
-    </p>
-
-    <div className="space-y-1">
-
-      <button className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white">
-        <span className="text-lg">⚙️</span>
-        <span>Settings</span>
-      </button>
-
-      <button className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-slate-800 hover:text-white">
-        <span className="text-lg">📖</span>
-        <span>Audit Logs</span>
-      </button>
-
-    </div>
-
-  </nav>
-
-  {/* SYSTEM STATUS */}
-
-  <div className="absolute bottom-0 left-0 right-0 border-t border-slate-800 p-4">
-
-    <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4">
-
-      <div className="flex items-center gap-2">
-
-        <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-
-        <span className="text-xs font-medium text-emerald-400">
-          All Systems Operational
-        </span>
-
-      </div>
-
-      <p className="mt-2 text-[10px] text-slate-600">
-        AI Engine • OCR • Face Verification
-      </p>
-
-    </div>
-
-  </div>
-
-</aside>
-
-      {/* =====================================
-          HEADER
-      ===================================== */}
-
-      <header className="border-b border-slate-800 bg-slate-900/90 lg:ml-64">
-
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              AI Identity Screening
-            </h1>
-
-            <p className="mt-1 text-sm text-slate-400">
-              Fake Identity & Documents Detection System
-            </p>
+            <div>
+              <h1 className="text-sm font-bold tracking-wide">
+                ID<span className="text-cyan-400">GUARD</span>
+              </h1>
+              <p className="text-[10px] text-slate-500">
+                AI SCREENING PLATFORM
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-400">
-
-            <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-
-            System Online
-
-          </div>
-
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="rounded-lg p-2 text-slate-500 hover:bg-white/5 hover:text-white lg:hidden"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-      </header>
-
-      {/* =====================================
-          MAIN
-      ===================================== */}
-
-      <main className="mx-auto max-w-7xl px-6 py-8 lg:ml-64">
-
-        {/* =====================================
-            PAGE TITLE
-        ===================================== */}
-
-        <div className="mb-8">
-
-          <p className="text-sm font-medium text-blue-400">
-            AI DOCUMENT ANALYSIS
+        <div className="px-4 pt-6">
+          <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600">
+            Main Menu
           </p>
 
-          <h2 className="mt-1 text-3xl font-bold">
-            Screening Dashboard
+          <nav className="space-y-1">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const active = activePage === item.name;
+
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => navigate(item.name)}
+                  className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm transition-all ${
+                    active
+                      ? "bg-cyan-400/10 text-cyan-300 shadow-[inset_3px_0_0_#22d3ee]"
+                      : "text-slate-400 hover:bg-white/[0.04] hover:text-white"
+                  }`}
+                >
+                  <Icon
+                    size={18}
+                    className={
+                      active
+                        ? "text-cyan-300"
+                        : "text-slate-500 group-hover:text-slate-300"
+                    }
+                  />
+
+                  <span>{item.name}</span>
+
+                  {active && (
+                    <ChevronRight className="ml-auto h-4 w-4 text-cyan-400" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="mt-auto px-4 pb-5">
+          <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600">
+            System
+          </p>
+
+          {bottomItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <button
+                key={item.name}
+                onClick={() => navigate(item.name)}
+                className={`mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm ${
+                  activePage === item.name
+                    ? "bg-white/5 text-white"
+                    : "text-slate-400 hover:bg-white/[0.04] hover:text-white"
+                }`}
+              >
+                <Icon size={18} />
+                {item.name}
+              </button>
+            );
+          })}
+
+          <div className="mt-5 rounded-2xl border border-emerald-400/10 bg-emerald-400/[0.04] p-4">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              </span>
+
+              <span className="text-xs font-semibold text-emerald-300">
+                All Systems Operational
+              </span>
+            </div>
+
+            <p className="mt-2 text-[10px] leading-4 text-slate-500">
+              AI engine, OCR and verification services are running normally.
+            </p>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+/* =========================
+   HEADER
+========================= */
+
+function Header({
+  activePage,
+  setSidebarOpen,
+  search,
+  setSearch,
+}) {
+  return (
+    <header className="sticky top-0 z-30 border-b border-white/10 bg-[#050816]/80 backdrop-blur-xl">
+      <div className="flex h-[78px] items-center gap-4 px-4 sm:px-6 lg:px-8">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-slate-400 lg:hidden"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-lg font-bold text-white">
+            {activePage}
           </h2>
-
-          <p className="mt-2 text-slate-400">
-            Upload and analyze identity documents using AI-powered
-            screening.
+          <p className="hidden text-xs text-slate-500 sm:block">
+            AI-powered identity and document security
           </p>
-
         </div>
 
-        {/* =====================================
-            STATS
-        ===================================== */}
-
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-
-          {/* Documents Screened */}
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-lg">
-
-            <p className="text-sm text-slate-400">
-              Documents Screened
-            </p>
-
-            <h3 className="mt-2 text-3xl font-bold">
-              1,248
-            </h3>
-
-            <p className="mt-2 text-xs text-slate-500">
-              Total processed
-            </p>
-
+        <div className="hidden w-64 md:block">
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5">
+            <Search size={16} className="text-slate-500" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search documents..."
+              className="w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-600"
+            />
           </div>
-
-          {/* Verified */}
-
-          <div className="rounded-2xl border border-emerald-500/10 bg-slate-900 p-5 shadow-lg">
-
-            <p className="text-sm text-slate-400">
-              Verified
-            </p>
-
-            <h3 className="mt-2 text-3xl font-bold text-emerald-400">
-              1,086
-            </h3>
-
-            <p className="mt-2 text-xs text-emerald-400/70">
-              87.0% verification rate
-            </p>
-
-          </div>
-
-          {/* Suspicious */}
-
-          <div className="rounded-2xl border border-yellow-500/10 bg-slate-900 p-5 shadow-lg">
-
-            <p className="text-sm text-slate-400">
-              Suspicious
-            </p>
-
-            <h3 className="mt-2 text-3xl font-bold text-yellow-400">
-              117
-            </h3>
-
-            <p className="mt-2 text-xs text-yellow-400/70">
-              Requires review
-            </p>
-
-          </div>
-
-          {/* Fake */}
-
-          <div className="rounded-2xl border border-red-500/10 bg-slate-900 p-5 shadow-lg">
-
-            <p className="text-sm text-slate-400">
-              Fake Detected
-            </p>
-
-            <h3 className="mt-2 text-3xl font-bold text-red-400">
-              45
-            </h3>
-
-            <p className="mt-2 text-xs text-red-400/70">
-              Potential fraud
-            </p>
-
-          </div>
-
         </div>
 
-        {/* =====================================
-            UPLOAD SECTION
-        ===================================== */}
+        <button className="relative rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-slate-400 hover:text-white">
+          <Bell size={18} />
+          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cyan-400" />
+        </button>
 
-        <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
+        <div className="hidden h-9 w-px bg-white/10 sm:block" />
 
-          <div>
-
-            <h3 className="text-xl font-semibold">
-              Upload Identity Document
-            </h3>
-
-            <p className="mt-1 text-sm text-slate-400">
-              Upload a document to start AI-powered authenticity
-              screening.
-            </p>
-
+        <div className="hidden items-center gap-3 sm:flex">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/30 to-blue-500/20 ring-1 ring-white/10">
+            <UserRound size={17} className="text-cyan-300" />
           </div>
 
-          {/* DROP ZONE */}
+          <div className="hidden xl:block">
+            <p className="text-xs font-semibold">Security Admin</p>
+            <p className="text-[10px] text-slate-500">Administrator</p>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+}
 
-          <label
-            onDragOver={(event) => {
-              event.preventDefault();
+/* =========================
+   DASHBOARD
+========================= */
+
+function Dashboard({ navigate, history, scanResult }) {
+  return (
+    <div className="mx-auto max-w-[1600px] space-y-7">
+      <PageHeading
+        eyebrow="SECURITY OVERVIEW"
+        title="Identity Screening Dashboard"
+        description="Monitor document authenticity, risk signals and verification activity."
+        action={
+          <button
+            onClick={() => navigate("Document Upload")}
+            className="flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-[0_0_25px_rgba(34,211,238,.18)] transition hover:bg-cyan-300"
+          >
+            <UploadCloud size={17} />
+            New Screening
+          </button>
+        }
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Documents Screened"
+          value="1,284"
+          change="+12.8%"
+          icon={FileCheck2}
+          tone="cyan"
+          description="vs. last 30 days"
+        />
+
+        <StatCard
+          title="Verified Documents"
+          value="1,071"
+          change="+8.4%"
+          icon={ShieldCheck}
+          tone="green"
+          description="83.4% verification rate"
+        />
+
+        <StatCard
+          title="Suspicious Cases"
+          value="142"
+          change="+4.2%"
+          icon={AlertTriangle}
+          tone="yellow"
+          description="Requires review"
+        />
+
+        <StatCard
+          title="Fake Detected"
+          value="71"
+          change="+2.1%"
+          icon={XCircle}
+          tone="red"
+          description="Blocked by AI engine"
+        />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.7fr_1fr]">
+        <Panel>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">Screening Activity</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Verification activity over the last 7 days
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 text-[10px] text-slate-500">
+              <LegendDot color="bg-emerald-400" label="Verified" />
+              <LegendDot color="bg-amber-400" label="Suspicious" />
+              <LegendDot color="bg-red-400" label="Fake" />
+            </div>
+          </div>
+
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={activityData}>
+                <defs>
+                  <linearGradient id="verifiedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,.05)"
+                />
+
+                <XAxis
+                  dataKey="day"
+                  tick={{ fill: "#64748b", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+
+                <YAxis
+                  tick={{ fill: "#64748b", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+
+                <Tooltip
+                  contentStyle={{
+                    background: "#0b1224",
+                    border: "1px solid rgba(255,255,255,.1)",
+                    borderRadius: 12,
+                    color: "#fff",
+                    fontSize: 12,
+                  }}
+                />
+
+                <Area
+                  type="monotone"
+                  dataKey="verified"
+                  stroke="#22d3ee"
+                  strokeWidth={2}
+                  fill="url(#verifiedGradient)"
+                />
+
+                <Area
+                  type="monotone"
+                  dataKey="suspicious"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  fill="transparent"
+                />
+
+                <Area
+                  type="monotone"
+                  dataKey="fake"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  fill="transparent"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+
+        <Panel>
+          <div className="mb-4">
+            <p className="text-sm font-bold">Risk Distribution</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Current screening risk profile
+            </p>
+          </div>
+
+          <div className="relative h-[220px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={riskData}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={62}
+                  outerRadius={88}
+                  paddingAngle={4}
+                  stroke="none"
+                >
+                  {riskData.map((_, index) => (
+                    <Cell key={index} fill={COLORS[index]} />
+                  ))}
+                </Pie>
+
+                <Tooltip
+                  contentStyle={{
+                    background: "#0b1224",
+                    border: "1px solid rgba(255,255,255,.1)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-3xl font-black">71%</span>
+              <span className="text-[10px] uppercase tracking-wider text-slate-500">
+                Low Risk
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {riskData.map((item, index) => (
+              <div key={item.name} className="flex items-center gap-3">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: COLORS[index] }}
+                />
+
+                <span className="flex-1 text-xs text-slate-400">
+                  {item.name}
+                </span>
+
+                <span className="text-xs font-bold">{item.value}%</span>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.45fr_1fr]">
+        <RecentScreenings history={history} />
+
+        <Panel>
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">AI Engine Status</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Live system diagnostics
+              </p>
+            </div>
+
+            <Activity className="text-emerald-400" size={19} />
+          </div>
+
+          <div className="space-y-4">
+            <SystemStatus
+              icon={BrainCircuit}
+              name="AI Screening Engine"
+              status="Operational"
+              value="99.8%"
+            />
+
+            <SystemStatus
+              icon={FileText}
+              name="OCR Extraction"
+              status="Operational"
+              value="98.6%"
+            />
+
+            <SystemStatus
+              icon={Fingerprint}
+              name="Biometric Matching"
+              status="Operational"
+              value="97.9%"
+            />
+
+            <SystemStatus
+              icon={Database}
+              name="Identity Database"
+              status="Connected"
+              value="24ms"
+            />
+          </div>
+
+          {scanResult && (
+            <div className="mt-5 rounded-xl border border-cyan-400/10 bg-cyan-400/[0.04] p-4">
+              <div className="flex items-center gap-2 text-cyan-300">
+                <Sparkles size={16} />
+                <span className="text-xs font-bold">
+                  Latest AI Screening
+                </span>
+              </div>
+
+              <div className="mt-2 flex items-center justify-between">
+                <span className="truncate text-xs text-slate-400">
+                  {scanResult.extractedData.documentType}
+                </span>
+                <span className="font-bold text-emerald-400">
+                  {scanResult.score}%
+                </span>
+              </div>
+            </div>
+          )}
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+/* =========================
+   UPLOAD PAGE
+========================= */
+
+function UploadPage({
+  selectedFile,
+  setSelectedFile,
+  isDragging,
+  setIsDragging,
+  handleDrop,
+  handleFileChange,
+  startScreening,
+  isScanning,
+  error,
+  scanResult,
+}) {
+  return (
+    <div className="mx-auto max-w-6xl space-y-7">
+      <PageHeading
+        eyebrow="DOCUMENT INGESTION"
+        title="Upload & Screen"
+        description="Upload an identity document and run the AI authenticity screening pipeline."
+      />
+
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+        <Panel className="overflow-hidden">
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
               setIsDragging(true);
             }}
             onDragLeave={() => setIsDragging(false)}
             onDrop={handleDrop}
-            className={`mt-6 flex min-h-64 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition ${
+            className={`relative flex min-h-[370px] flex-col items-center justify-center rounded-2xl border border-dashed p-8 text-center transition ${
               isDragging
-                ? "border-blue-400 bg-blue-500/10"
-                : "border-slate-700 bg-slate-950/40 hover:border-blue-500/60 hover:bg-slate-950/70"
+                ? "border-cyan-400 bg-cyan-400/[0.06]"
+                : "border-white/10 bg-white/[0.015]"
             }`}
           >
-
-            <input
-              type="file"
-              accept=".jpg,.jpeg,.png,.pdf"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 text-3xl">
-              📄
+            <div className="absolute left-5 top-5 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-red-400" />
+              <span className="h-2 w-2 rounded-full bg-yellow-400" />
+              <span className="h-2 w-2 rounded-full bg-green-400" />
             </div>
 
-            <p className="text-lg font-medium text-slate-200">
-              {isDragging
-                ? "Drop your document here"
-                : "Drag & drop your document here"}
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-cyan-400/10 ring-1 ring-cyan-400/20">
+              <UploadCloud size={36} className="text-cyan-300" />
+            </div>
+
+            <h3 className="text-xl font-bold">
+              Drop your document here
+            </h3>
+
+            <p className="mt-2 max-w-md text-sm text-slate-500">
+              Upload Aadhaar, PAN, Passport, Driving License or other supported
+              identity documents.
             </p>
 
-            <p className="mt-2 text-sm text-slate-500">
-              or click to browse from your computer
+            <label className="mt-7 cursor-pointer rounded-xl bg-white px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-cyan-100">
+              Choose File
+              <input
+                type="file"
+                className="hidden"
+                accept=".jpg,.jpeg,.png,.pdf"
+                onChange={handleFileChange}
+              />
+            </label>
+
+            <p className="mt-4 text-[11px] text-slate-600">
+              JPG, PNG or PDF • Maximum 10 MB
             </p>
-
-            <p className="mt-4 text-xs text-slate-600">
-              JPG, PNG, PDF • Maximum size 10 MB
-            </p>
-
-          </label>
-
-          {/* ERROR */}
+          </div>
 
           {error && (
-            <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-              ⚠ {error}
+            <div className="mt-4 flex items-center gap-2 rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-xs text-red-300">
+              <AlertTriangle size={15} />
+              {error}
             </div>
           )}
 
-          {/* SELECTED FILE */}
-
           {selectedFile && (
-            <div className="mt-5 rounded-xl border border-slate-700 bg-slate-950/70 p-4">
+            <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-400/10">
+                  <FileText className="text-cyan-300" />
+                </div>
 
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">
+                    {selectedFile.name}
+                  </p>
 
-                <div className="flex items-center gap-4">
-
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-xl">
-                    📎
-                  </div>
-
-                  <div>
-
-                    <p className="max-w-xs truncate font-medium text-slate-200">
-                      {selectedFile.name}
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-
-                  </div>
-
+                  <p className="mt-1 text-xs text-slate-500">
+                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
                 </div>
 
                 <button
-                  onClick={removeFile}
-                  className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-400 transition hover:border-red-500/40 hover:text-red-400"
+                  onClick={() => setSelectedFile(null)}
+                  className="rounded-lg p-2 text-slate-500 hover:bg-white/5 hover:text-white"
                 >
-                  Remove
+                  <X size={17} />
                 </button>
-
               </div>
-
-              {/* SCAN BUTTON */}
 
               <button
                 onClick={startScreening}
                 disabled={isScanning}
-                className="mt-5 w-full rounded-xl bg-blue-600 px-6 py-3 font-semibold transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 py-3 text-sm font-bold text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isScanning
-                  ? "AI Screening in Progress..."
-                  : "Start AI Screening"}
+                {isScanning ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+                    AI Screening in Progress...
+                  </>
+                ) : (
+                  <>
+                    <Zap size={17} />
+                    Start AI Screening
+                  </>
+                )}
               </button>
-
             </div>
           )}
+        </Panel>
 
-          {/* =====================================
-              SCANNING
-          ===================================== */}
+        <Panel>
+          <div className="mb-6">
+            <p className="text-sm font-bold">Screening Pipeline</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Multi-layer document analysis
+            </p>
+          </div>
 
-          {isScanning && (
-            <div className="mt-5 rounded-xl border border-blue-500/20 bg-blue-500/5 p-5">
+          <div className="space-y-5">
+            <PipelineStep
+              number="01"
+              icon={FileSearch}
+              title="Document Analysis"
+              description="Structure and visual integrity"
+            />
 
-              <div className="flex items-center justify-between text-sm">
+            <PipelineStep
+              number="02"
+              icon={FileText}
+              title="OCR Extraction"
+              description="Extract identity information"
+            />
 
-                <span className="text-blue-300">
-                  Analyzing document...
-                </span>
+            <PipelineStep
+              number="03"
+              icon={Fingerprint}
+              title="Biometric Match"
+              description="Face and identity comparison"
+            />
 
-                <span className="text-blue-400">
-                  AI
-                </span>
+            <PipelineStep
+              number="04"
+              icon={BrainCircuit}
+              title="AI Risk Assessment"
+              description="Fraud and anomaly detection"
+            />
+          </div>
 
-              </div>
-
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-
-                <div className="h-full w-2/3 animate-pulse rounded-full bg-blue-500"></div>
-
-              </div>
-
-              <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-3">
-
-                <span>✓ OCR Analysis</span>
-
-                <span>✓ Identity Check</span>
-
-                <span>◌ Fraud Detection</span>
-
-              </div>
-
-            </div>
-          )}
-
-        </section>
-
-        {/* =====================================
-            FORENSIC ANALYSIS RESULT
-        ===================================== */}
-
-        {scanResult && !isScanning && (
-          <section className="mt-8 space-y-6">
-
-            {/* MAIN RESULT */}
-
-            <div className="rounded-2xl border border-emerald-500/20 bg-slate-950 p-6 shadow-xl">
-
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-
-                <div>
-
-                  <p className="text-sm font-medium text-blue-400">
-                    AI VERIFICATION COMPLETE
-                  </p>
-
-                  <h3 className="mt-2 text-3xl font-bold text-emerald-400">
-                    ✓ {scanResult.status}
-                  </h3>
-
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-                    {scanResult.message}
-                  </p>
-
-                </div>
-
-                {/* AI SCORE */}
-
-                <div className="flex h-32 w-32 shrink-0 flex-col items-center justify-center rounded-full border-8 border-emerald-500/20 bg-emerald-500/5">
-
-                  <span className="text-3xl font-bold text-emerald-400">
-                    {scanResult.score}%
-                  </span>
-
-                  <span className="mt-1 text-[10px] uppercase tracking-wider text-slate-500">
-                    AI Confidence
-                  </span>
-
-                </div>
-
-              </div>
-
+          <div className="mt-7 rounded-2xl border border-cyan-400/10 bg-cyan-400/[0.04] p-4">
+            <div className="flex items-center gap-2 text-cyan-300">
+              <LockKeyhole size={16} />
+              <span className="text-xs font-bold">
+                Secure Processing
+              </span>
             </div>
 
-            {/* =================================
-                FORENSIC METRICS
-            ================================= */}
+            <p className="mt-2 text-[11px] leading-5 text-slate-500">
+              Uploaded documents are processed through the screening pipeline
+              and protected during analysis.
+            </p>
+          </div>
+        </Panel>
+      </div>
 
-            <div>
+      {scanResult && <ResultSection result={scanResult} />}
+    </div>
+  );
+}
 
-              <div className="mb-4">
+/* =========================
+   VERIFICATION
+========================= */
 
-                <p className="text-sm font-medium text-blue-400">
-                  FORENSIC ANALYSIS
+function VerificationPage({
+  scanResult,
+  navigate,
+  selectedFile,
+  startScreening,
+  isScanning,
+}) {
+  return (
+    <div className="mx-auto max-w-7xl space-y-7">
+      <PageHeading
+        eyebrow="IDENTITY VERIFICATION"
+        title="Verification Center"
+        description="Review the latest document authenticity and identity matching result."
+      />
+
+      {!scanResult ? (
+        <Panel className="py-20 text-center">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-cyan-400/10">
+            <ShieldCheck size={38} className="text-cyan-300" />
+          </div>
+
+          <h3 className="mt-6 text-xl font-bold">
+            No verification result available
+          </h3>
+
+          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
+            Upload a document first and run the AI screening pipeline to view
+            verification results.
+          </p>
+
+          <button
+            onClick={() => navigate("Document Upload")}
+            className="mt-6 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950"
+          >
+            Upload Document
+          </button>
+        </Panel>
+      ) : (
+        <ResultSection result={scanResult} />
+      )}
+
+      {selectedFile && !scanResult && (
+        <button
+          onClick={startScreening}
+          disabled={isScanning}
+          className="rounded-xl bg-cyan-400 px-5 py-3 font-bold text-slate-950"
+        >
+          {isScanning ? "Scanning..." : "Run Screening"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* =========================
+   RISK DASHBOARD
+========================= */
+
+function RiskDashboard() {
+  return (
+    <div className="mx-auto max-w-7xl space-y-7">
+      <PageHeading
+        eyebrow="RISK INTELLIGENCE"
+        title="Risk Dashboard"
+        description="Analyze fraud signals and identify documents requiring investigation."
+      />
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <RiskCard
+          title="Low Risk"
+          value="71%"
+          count="912 documents"
+          tone="green"
+          icon={ShieldCheck}
+        />
+
+        <RiskCard
+          title="Medium Risk"
+          value="19%"
+          count="244 documents"
+          tone="yellow"
+          icon={AlertTriangle}
+        />
+
+        <RiskCard
+          title="High Risk"
+          value="10%"
+          count="128 documents"
+          tone="red"
+          icon={XCircle}
+        />
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+        <Panel>
+          <div className="mb-6">
+            <p className="text-sm font-bold">Risk Score Trend</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Average risk score across screening activity
+            </p>
+          </div>
+
+          <div className="h-[310px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={activityData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,.05)"
+                />
+
+                <XAxis
+                  dataKey="day"
+                  tick={{ fill: "#64748b", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+
+                <YAxis
+                  tick={{ fill: "#64748b", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+
+                <Tooltip
+                  contentStyle={{
+                    background: "#0b1224",
+                    border: "1px solid rgba(255,255,255,.1)",
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                />
+
+                <Bar
+                  dataKey="suspicious"
+                  fill="#f59e0b"
+                  radius={[5, 5, 0, 0]}
+                />
+
+                <Bar
+                  dataKey="fake"
+                  fill="#ef4444"
+                  radius={[5, 5, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Panel>
+
+        <Panel>
+          <p className="text-sm font-bold">Risk Factors</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Most common suspicious signals
+          </p>
+
+          <div className="mt-6 space-y-5">
+            <RiskFactor title="Image Tampering" value={78} />
+            <RiskFactor title="Font Inconsistency" value={61} />
+            <RiskFactor title="Face Mismatch" value={44} />
+            <RiskFactor title="Metadata Anomaly" value={37} />
+            <RiskFactor title="OCR Structure Issue" value={24} />
+          </div>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+/* =========================
+   FORENSIC
+========================= */
+
+function ForensicPage({ scanResult }) {
+  const result = scanResult || {
+    forensic: {
+      documentIntegrity: 96,
+      ocrAccuracy: 98,
+      faceMatch: 94,
+      liveness: 97,
+      tampering: 8,
+      riskScore: 12,
+    },
+  };
+
+  return (
+    <div className="mx-auto max-w-7xl space-y-7">
+      <PageHeading
+        eyebrow="FORENSIC INTELLIGENCE"
+        title="Forensic Analysis"
+        description="Inspect document integrity, tampering signals and biometric confidence."
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={FileCheck2}
+          title="Document Integrity"
+          value={result.forensic.documentIntegrity}
+          suffix="%"
+        />
+
+        <MetricCard
+          icon={FileText}
+          title="OCR Accuracy"
+          value={result.forensic.ocrAccuracy}
+          suffix="%"
+        />
+
+        <MetricCard
+          icon={Fingerprint}
+          title="Face Match"
+          value={result.forensic.faceMatch}
+          suffix="%"
+        />
+
+        <MetricCard
+          icon={Activity}
+          title="Liveness"
+          value={result.forensic.liveness}
+          suffix="%"
+        />
+      </div>
+
+      <Panel>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-bold">Document Tampering Heatmap</p>
+            <p className="mt-1 text-xs text-slate-500">
+              AI-assisted visualization of suspicious document regions
+            </p>
+          </div>
+
+          <span className="rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1.5 text-[10px] font-bold text-emerald-300">
+            LOW TAMPERING
+          </span>
+        </div>
+
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#080d1d] p-5">
+          <div className="mx-auto max-w-3xl">
+            <div className="relative aspect-[1.6/1] overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-800/80 to-slate-950">
+              <div className="absolute inset-4 rounded-lg border border-cyan-400/20" />
+
+              <div className="absolute left-[9%] top-[12%] h-20 w-24 rounded-lg border border-cyan-400/20 bg-cyan-400/5" />
+
+              <div className="absolute right-[10%] top-[12%] h-28 w-24 rounded-lg border border-amber-400/30 bg-amber-400/10 shadow-[0_0_35px_rgba(245,158,11,.12)]" />
+
+              <div className="absolute bottom-[22%] left-[12%] h-3 w-[55%] rounded bg-white/10" />
+              <div className="absolute bottom-[14%] left-[12%] h-3 w-[42%] rounded bg-white/5" />
+
+              <div className="absolute right-[12%] bottom-[15%] h-14 w-14 rounded-full border border-red-400/30 bg-red-400/10 shadow-[0_0_30px_rgba(239,68,68,.15)]" />
+
+              <div className="absolute inset-x-0 top-1/2 border-t border-cyan-400/10" />
+              <div className="absolute inset-y-0 left-1/2 border-l border-cyan-400/10" />
+
+              <div className="absolute left-4 top-4 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[10px] text-slate-400 backdrop-blur">
+                DOCUMENT REGION ANALYSIS
+              </div>
+            </div>
+          </div>
+
+          <div className="mx-auto mt-5 flex max-w-3xl flex-wrap items-center justify-center gap-5 text-[10px] text-slate-500">
+            <LegendDot color="bg-emerald-400" label="Authentic region" />
+            <LegendDot color="bg-amber-400" label="Review region" />
+            <LegendDot color="bg-red-400" label="High anomaly" />
+          </div>
+        </div>
+      </Panel>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Panel>
+          <p className="text-sm font-bold">Integrity Checks</p>
+
+          <div className="mt-5 space-y-4">
+            <CheckRow title="Document structure" value="Passed" />
+            <CheckRow title="Text consistency" value="Passed" />
+            <CheckRow title="Image manipulation" value="Low" />
+            <CheckRow title="Metadata inspection" value="Passed" />
+            <CheckRow title="Security pattern analysis" value="Passed" />
+          </div>
+        </Panel>
+
+        <Panel>
+          <p className="text-sm font-bold">Forensic Summary</p>
+
+          <div className="mt-5 rounded-2xl border border-emerald-400/10 bg-emerald-400/[0.04] p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-400/10">
+                <ShieldCheck className="text-emerald-400" />
+              </div>
+
+              <div>
+                <p className="text-sm font-bold text-emerald-300">
+                  Document appears authentic
                 </p>
 
-                <h3 className="mt-1 text-xl font-semibold">
-                  Document Intelligence Report
-                </h3>
-
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-                {/* DOCUMENT INTEGRITY */}
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="text-sm text-slate-400">
-                      Document Integrity
-                    </span>
-
-                    <span className="text-xl">
-                      🔐
-                    </span>
-
-                  </div>
-
-                  <div className="mt-4 flex items-end justify-between">
-
-                    <span className="text-3xl font-bold text-emerald-400">
-                      {scanResult.forensic.documentIntegrity}%
-                    </span>
-
-                    <span className="text-xs text-emerald-400">
-                      Excellent
-                    </span>
-
-                  </div>
-
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-
-                    <div
-                      className="h-full rounded-full bg-emerald-500"
-                      style={{
-                        width: `${scanResult.forensic.documentIntegrity}%`,
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-
-                {/* OCR ACCURACY */}
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="text-sm text-slate-400">
-                      OCR Accuracy
-                    </span>
-
-                    <span className="text-xl">
-                      📝
-                    </span>
-
-                  </div>
-
-                  <div className="mt-4 flex items-end justify-between">
-
-                    <span className="text-3xl font-bold text-blue-400">
-                      {scanResult.forensic.ocrAccuracy}%
-                    </span>
-
-                    <span className="text-xs text-blue-400">
-                      High Accuracy
-                    </span>
-
-                  </div>
-
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-
-                    <div
-                      className="h-full rounded-full bg-blue-500"
-                      style={{
-                        width: `${scanResult.forensic.ocrAccuracy}%`,
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-
-                {/* FACE MATCH */}
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="text-sm text-slate-400">
-                      Face Match
-                    </span>
-
-                    <span className="text-xl">
-                      👤
-                    </span>
-
-                  </div>
-
-                  <div className="mt-4 flex items-end justify-between">
-
-                    <span className="text-3xl font-bold text-purple-400">
-                      {scanResult.forensic.faceMatch}%
-                    </span>
-
-                    <span className="text-xs text-purple-400">
-                      Matched
-                    </span>
-
-                  </div>
-
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-
-                    <div
-                      className="h-full rounded-full bg-purple-500"
-                      style={{
-                        width: `${scanResult.forensic.faceMatch}%`,
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-
-                {/* LIVENESS */}
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="text-sm text-slate-400">
-                      Liveness Detection
-                    </span>
-
-                    <span className="text-xl">
-                      🧬
-                    </span>
-
-                  </div>
-
-                  <div className="mt-4 flex items-end justify-between">
-
-                    <span className="text-3xl font-bold text-cyan-400">
-                      {scanResult.forensic.liveness}%
-                    </span>
-
-                    <span className="text-xs text-cyan-400">
-                      Genuine
-                    </span>
-
-                  </div>
-
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-
-                    <div
-                      className="h-full rounded-full bg-cyan-500"
-                      style={{
-                        width: `${scanResult.forensic.liveness}%`,
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-
-                {/* TAMPERING */}
-
-                <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="text-sm text-slate-400">
-                      Tampering Probability
-                    </span>
-
-                    <span className="text-xl">
-                      🛡️
-                    </span>
-
-                  </div>
-
-                  <div className="mt-4 flex items-end justify-between">
-
-                    <span className="text-3xl font-bold text-emerald-400">
-                      {scanResult.forensic.tampering}%
-                    </span>
-
-                    <span className="text-xs text-emerald-400">
-                      Low Risk
-                    </span>
-
-                  </div>
-
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-
-                    <div
-                      className="h-full rounded-full bg-emerald-500"
-                      style={{
-                        width: `${scanResult.forensic.tampering}%`,
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-
-                {/* RISK SCORE */}
-
-                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/5 p-5">
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="text-sm text-slate-400">
-                      Overall Risk Score
-                    </span>
-
-                    <span className="text-xl">
-                      ⚠️
-                    </span>
-
-                  </div>
-
-                  <div className="mt-4 flex items-end justify-between">
-
-                    <span className="text-3xl font-bold text-emerald-400">
-                      {scanResult.forensic.riskScore}/100
-                    </span>
-
-                    <span className="text-xs text-emerald-400">
-                      Low Risk
-                    </span>
-
-                  </div>
-
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-
-                    <div
-                      className="h-full rounded-full bg-emerald-500"
-                      style={{
-                        width: `${scanResult.forensic.riskScore}%`,
-                      }}
-                    />
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* =====================================
-    FORENSIC HEATMAP
-===================================== */}
-
-<div className="rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-
-  {/* HEADER */}
-
-  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-    <div>
-      <p className="text-sm font-medium text-blue-400">
-        FORENSIC VISUALIZATION
-      </p>
-
-      <h3 className="mt-1 text-xl font-semibold">
-        Document Tampering Analysis
-      </h3>
-
-      <p className="mt-1 text-sm text-slate-500">
-        AI-based analysis of suspicious document regions.
-      </p>
-    </div>
-
-    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-400">
-      ● Analysis Complete
-    </div>
-
-  </div>
-
-  {/* FORENSIC AREA */}
-
-  <div className="mt-6 grid gap-6 lg:grid-cols-2">
-
-    {/* DOCUMENT PREVIEW */}
-
-    <div>
-
-      <p className="mb-3 text-sm font-medium text-slate-400">
-        DOCUMENT ANALYSIS VIEW
-      </p>
-
-      <div className="relative flex min-h-[360px] items-center justify-center overflow-hidden rounded-2xl border border-slate-700 bg-slate-950">
-
-        {/* Fake document */}
-
-        <div className="relative h-[280px] w-[420px] max-w-[90%] rounded-xl border border-slate-600 bg-slate-800 p-5 shadow-2xl">
-
-          {/* Document Header */}
-
-          <div className="flex items-center gap-3 border-b border-slate-700 pb-4">
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20 text-xl">
-              🇮🇳
-            </div>
-
-            <div>
-
-              <div className="h-2 w-32 rounded bg-slate-500"></div>
-
-              <div className="mt-2 h-1.5 w-24 rounded bg-slate-700"></div>
-
-            </div>
-
-          </div>
-
-          {/* Photo */}
-
-          <div className="absolute left-5 top-24 flex h-24 w-20 items-center justify-center rounded-lg border border-slate-600 bg-slate-700 text-3xl">
-            👤
-          </div>
-
-          {/* Text */}
-
-          <div className="absolute left-32 top-24 space-y-3">
-
-            <div className="h-2 w-36 rounded bg-slate-600"></div>
-
-            <div className="h-2 w-28 rounded bg-slate-700"></div>
-
-            <div className="h-2 w-32 rounded bg-slate-700"></div>
-
-            <div className="h-2 w-24 rounded bg-slate-700"></div>
-
-          </div>
-
-          {/* Document Number */}
-
-          <div className="absolute bottom-12 left-5">
-
-            <div className="h-2 w-44 rounded bg-slate-600"></div>
-
-          </div>
-
-          {/* HEATMAP MARKERS */}
-
-          <div className="absolute left-[35%] top-[38%] h-14 w-20 rounded-lg border-2 border-emerald-400/70 bg-emerald-400/10 shadow-[0_0_25px_rgba(52,211,153,0.25)]">
-          </div>
-
-          <div className="absolute right-[12%] top-[55%] h-12 w-16 rounded-lg border-2 border-yellow-400/80 bg-yellow-400/10 shadow-[0_0_25px_rgba(250,204,21,0.25)]">
-          </div>
-
-          <div className="absolute left-[45%] bottom-[15%] h-10 w-24 rounded-lg border-2 border-red-400/90 bg-red-400/20 shadow-[0_0_30px_rgba(248,113,113,0.35)]">
-          </div>
-
-        </div>
-
-        {/* HEATMAP LABEL */}
-
-        <div className="absolute bottom-4 left-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
-          ⚠ Potential alteration region
-        </div>
-
-      </div>
-
-      {/* LEGEND */}
-
-      <div className="mt-4 flex flex-wrap gap-4 text-xs">
-
-        <div className="flex items-center gap-2 text-slate-400">
-          <span className="h-3 w-3 rounded-full bg-emerald-400"></span>
-          Authentic
-        </div>
-
-        <div className="flex items-center gap-2 text-slate-400">
-          <span className="h-3 w-3 rounded-full bg-yellow-400"></span>
-          Review
-        </div>
-
-        <div className="flex items-center gap-2 text-slate-400">
-          <span className="h-3 w-3 rounded-full bg-red-400"></span>
-          Suspicious
-        </div>
-
-      </div>
-
-    </div>
-
-    {/* FORENSIC FINDINGS */}
-
-    <div>
-
-      <p className="mb-3 text-sm font-medium text-slate-400">
-        FORENSIC FINDINGS
-      </p>
-
-      <div className="space-y-3">
-
-        {/* Finding 1 */}
-
-        <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4">
-
-          <div className="flex items-center justify-between">
-
-            <span className="text-sm font-medium text-slate-200">
-              Document Structure
-            </span>
-
-            <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-400">
-              PASS
-            </span>
-
-          </div>
-
-          <p className="mt-2 text-xs leading-5 text-slate-500">
-            Document layout and structural patterns are consistent
-            with the expected format.
-          </p>
-
-        </div>
-
-        {/* Finding 2 */}
-
-        <div className="rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4">
-
-          <div className="flex items-center justify-between">
-
-            <span className="text-sm font-medium text-slate-200">
-              Font Consistency
-            </span>
-
-            <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs text-emerald-400">
-              PASS
-            </span>
-
-          </div>
-
-          <p className="mt-2 text-xs leading-5 text-slate-500">
-            Font characteristics remain consistent across detected
-            text regions.
-          </p>
-
-        </div>
-
-        {/* Finding 3 */}
-
-        <div className="rounded-xl border border-yellow-500/10 bg-yellow-500/5 p-4">
-
-          <div className="flex items-center justify-between">
-
-            <span className="text-sm font-medium text-slate-200">
-              Pixel Anomaly
-            </span>
-
-            <span className="rounded-full bg-yellow-500/10 px-2.5 py-1 text-xs text-yellow-400">
-              REVIEW
-            </span>
-
-          </div>
-
-          <p className="mt-2 text-xs leading-5 text-slate-500">
-            Minor pixel-level inconsistencies detected in one
-            document region.
-          </p>
-
-        </div>
-
-        {/* Finding 4 */}
-
-        <div className="rounded-xl border border-red-500/10 bg-red-500/5 p-4">
-
-          <div className="flex items-center justify-between">
-
-            <span className="text-sm font-medium text-slate-200">
-              Manipulation Indicator
-            </span>
-
-            <span className="rounded-full bg-red-500/10 px-2.5 py-1 text-xs text-red-400">
-              LOW
-            </span>
-
-          </div>
-
-          <p className="mt-2 text-xs leading-5 text-slate-500">
-            Low probability of digital alteration detected by the
-            forensic analysis layer.
-          </p>
-
-        </div>
-
-      </div>
-
-      {/* FORENSIC SUMMARY */}
-
-      <div className="mt-5 rounded-xl border border-slate-700 bg-slate-950/60 p-5">
-
-        <div className="flex items-center justify-between">
-
-          <span className="text-sm text-slate-400">
-            Forensic Confidence
-          </span>
-
-          <span className="text-xl font-bold text-emerald-400">
-            96%
-          </span>
-
-        </div>
-
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800">
-
-          <div
-            className="h-full rounded-full bg-emerald-500"
-            style={{ width: "96%" }}
-          ></div>
-
-        </div>
-
-        <p className="mt-3 text-xs leading-5 text-slate-600">
-          Overall forensic analysis indicates a low probability
-          of document manipulation.
-        </p>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-            {/* =================================
-                EXTRACTED DATA + ANOMALIES
-            ================================= */}
-
-            <div className="grid gap-6 lg:grid-cols-2">
-
-              {/* EXTRACTED DATA */}
-
-              <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
-
-                <div className="flex items-center justify-between">
-
-                  <div>
-
-                    <p className="text-sm text-blue-400">
-                      OCR EXTRACTION
-                    </p>
-
-                    <h3 className="mt-1 text-xl font-semibold">
-                      Extracted Identity Data
-                    </h3>
-
-                  </div>
-
-                  <span className="text-2xl">
-                    📋
+                <p className="mt-1 text-xs text-slate-500">
+                  Overall forensic risk score:{" "}
+                  <span className="font-bold text-white">
+                    {result.forensic.riskScore}/100
                   </span>
-
-                </div>
-
-                <div className="mt-6 space-y-4">
-
-                  {/* DOCUMENT TYPE */}
-
-                  <div className="flex justify-between border-b border-slate-800 pb-3">
-
-                    <span className="text-sm text-slate-500">
-                      Document Type
-                    </span>
-
-                    <span className="text-sm font-medium text-slate-200">
-                      {scanResult.extractedData.documentType}
-                    </span>
-
-                  </div>
-
-                  {/* DOCUMENT NUMBER */}
-
-                  <div className="flex justify-between border-b border-slate-800 pb-3">
-
-                    <span className="text-sm text-slate-500">
-                      Document Number
-                    </span>
-
-                    <span className="text-sm font-medium text-slate-200">
-                      {scanResult.extractedData.documentNumber}
-                    </span>
-
-                  </div>
-
-                  {/* NAME */}
-
-                  <div className="flex justify-between border-b border-slate-800 pb-3">
-
-                    <span className="text-sm text-slate-500">
-                      Name
-                    </span>
-
-                    <span className="text-sm font-medium text-slate-200">
-                      {scanResult.extractedData.name}
-                    </span>
-
-                  </div>
-
-                  {/* DOB */}
-
-                  <div className="flex justify-between border-b border-slate-800 pb-3">
-
-                    <span className="text-sm text-slate-500">
-                      Date of Birth
-                    </span>
-
-                    <span className="text-sm font-medium text-slate-200">
-                      {scanResult.extractedData.dob}
-                    </span>
-
-                  </div>
-
-                  {/* GENDER */}
-
-                  <div className="flex justify-between">
-
-                    <span className="text-sm text-slate-500">
-                      Gender
-                    </span>
-
-                    <span className="text-sm font-medium text-slate-200">
-                      {scanResult.extractedData.gender}
-                    </span>
-
-                  </div>
-
-                </div>
-
+                </p>
               </div>
+            </div>
+          </div>
+        </Panel>
+      </div>
+    </div>
+  );
+}
 
-              {/* DETECTED INDICATORS */}
+/* =========================
+   INVESTIGATION
+========================= */
 
-              <div className="rounded-2xl border border-slate-800 bg-slate-900 p-6">
+function InvestigationPage({ history }) {
+  return (
+    <div className="mx-auto max-w-7xl space-y-7">
+      <PageHeading
+        eyebrow="CASE MANAGEMENT"
+        title="Investigation Center"
+        description="Review suspicious screening cases and prioritize manual investigation."
+      />
 
-                <div className="flex items-center justify-between">
+      <Panel>
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-bold">Investigation Queue</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Documents requiring analyst attention
+            </p>
+          </div>
 
-                  <div>
+          <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-3 py-1.5 text-[10px] font-bold text-amber-300">
+            12 OPEN CASES
+          </span>
+        </div>
 
-                    <p className="text-sm text-blue-400">
-                      SECURITY ANALYSIS
-                    </p>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[700px] text-left">
+            <thead>
+              <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-slate-600">
+                <th className="px-4 py-3">Document</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Risk</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Action</th>
+              </tr>
+            </thead>
 
-                    <h3 className="mt-1 text-xl font-semibold">
-                      Detected Indicators
-                    </h3>
+            <tbody>
+              {history
+                .filter((x) => x.status !== "Verified")
+                .map((item) => (
+                  <tr
+                    key={item.id}
+                    className="border-b border-white/5 last:border-0"
+                  >
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-400/10">
+                          <FileText size={16} className="text-red-300" />
+                        </div>
 
-                  </div>
-
-                  <span className="text-2xl">
-                    🔎
-                  </span>
-
-                </div>
-
-                <div className="mt-6 space-y-3">
-
-                  {scanResult.anomalies.map(
-                    (anomaly, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-3 rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4"
-                      >
-
-                        <span className="mt-0.5 text-emerald-400">
-                          ✓
+                        <span className="text-xs font-semibold">
+                          {item.file}
                         </span>
-
-                        <p className="text-sm leading-6 text-slate-300">
-                          {anomaly}
-                        </p>
-
                       </div>
-                    )
-                  )}
+                    </td>
 
+                    <td className="px-4 py-4 text-xs text-slate-400">
+                      {item.type}
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <span className="text-xs font-bold text-red-300">
+                        {100 - item.score}/100
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <StatusBadge status={item.status} />
+                    </td>
+
+                    <td className="px-4 py-4">
+                      <button className="rounded-lg border border-white/10 px-3 py-2 text-[10px] font-bold text-slate-300 hover:bg-white/5">
+                        Investigate
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
+/* =========================
+   AUDIT LOGS
+========================= */
+
+function AuditLogs({ history }) {
+  return (
+    <div className="mx-auto max-w-7xl space-y-7">
+      <PageHeading
+        eyebrow="SECURITY AUDIT"
+        title="Audit Logs"
+        description="Track screening operations and system activity."
+      />
+
+      <Panel>
+        <div className="space-y-1">
+          {history.map((item, index) => (
+            <div
+              key={item.id}
+              className="flex items-center gap-4 rounded-xl p-4 transition hover:bg-white/[0.025]"
+            >
+              <div className="relative">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10">
+                  <Activity size={17} className="text-cyan-300" />
                 </div>
 
+                {index !== history.length - 1 && (
+                  <div className="absolute left-1/2 top-10 h-7 w-px bg-white/10" />
+                )}
               </div>
 
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold">
+                  Document screening completed
+                </p>
+
+                <p className="mt-1 truncate text-[11px] text-slate-500">
+                  {item.file} • AI screening engine
+                </p>
+              </div>
+
+              <StatusBadge status={item.status} />
+
+              <span className="hidden text-[10px] text-slate-600 sm:block">
+                {item.time}
+              </span>
             </div>
+          ))}
+        </div>
+      </Panel>
+    </div>
+  );
+}
 
-          </section>
-        )}
+/* =========================
+   SETTINGS
+========================= */
 
-        {/* =====================================
-            SECURITY FEATURES
-        ===================================== */}
+function SettingsPage() {
+  return (
+    <div className="mx-auto max-w-5xl space-y-7">
+      <PageHeading
+        eyebrow="PLATFORM CONFIGURATION"
+        title="Settings"
+        description="Configure security and screening preferences."
+      />
 
-        <section className="mt-8 grid gap-5 md:grid-cols-3">
+      <Panel>
+        <SettingRow
+          icon={BrainCircuit}
+          title="AI Screening Engine"
+          description="Enable automated document authenticity analysis."
+          enabled
+        />
 
-          {/* DOCUMENT ANALYSIS */}
+        <SettingRow
+          icon={Fingerprint}
+          title="Biometric Verification"
+          description="Enable face matching and liveness verification."
+          enabled
+        />
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+        <SettingRow
+          icon={AlertTriangle}
+          title="High Risk Alerts"
+          description="Generate alerts for high-risk screening results."
+          enabled
+        />
 
-            <div className="text-2xl">
-              🔍
-            </div>
+        <SettingRow
+          icon={Database}
+          title="External Identity Database"
+          description="Use connected identity verification services."
+          enabled={false}
+        />
+      </Panel>
+    </div>
+  );
+}
 
-            <h3 className="mt-3 font-semibold">
-              Document Analysis
-            </h3>
+/* =========================
+   RECENT SCREENINGS
+========================= */
 
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              AI checks document structure, text and visual patterns.
-            </p>
+function RecentScreenings({ history }) {
+  return (
+    <Panel className="overflow-hidden">
+      <div className="mb-5 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-bold">Recent Screenings</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Latest document verification activity
+          </p>
+        </div>
 
-          </div>
+        <button className="flex items-center gap-1 text-[10px] font-bold text-cyan-300">
+          View All
+          <ChevronRight size={13} />
+        </button>
+      </div>
 
-          {/* FRAUD DETECTION */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[650px] text-left">
+          <thead>
+            <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-slate-600">
+              <th className="px-3 py-3">Document</th>
+              <th className="px-3 py-3">Type</th>
+              <th className="px-3 py-3">Score</th>
+              <th className="px-3 py-3">Status</th>
+              <th className="px-3 py-3">Time</th>
+            </tr>
+          </thead>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+          <tbody>
+            {history.slice(0, 5).map((item) => (
+              <tr
+                key={item.id}
+                className="border-b border-white/5 last:border-0"
+              >
+                <td className="px-3 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5">
+                      <FileText size={14} className="text-slate-400" />
+                    </div>
 
-            <div className="text-2xl">
-              🛡️
-            </div>
+                    <span className="max-w-[180px] truncate text-xs font-medium">
+                      {item.file}
+                    </span>
+                  </div>
+                </td>
 
-            <h3 className="mt-3 font-semibold">
-              Fraud Detection
-            </h3>
+                <td className="px-3 py-4 text-xs text-slate-500">
+                  {item.type}
+                </td>
 
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              Suspicious documents can be flagged for further review.
-            </p>
+                <td className="px-3 py-4">
+                  <span
+                    className={`text-xs font-bold ${
+                      item.score >= 85
+                        ? "text-emerald-400"
+                        : item.score >= 60
+                        ? "text-amber-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {item.score}%
+                  </span>
+                </td>
 
-          </div>
+                <td className="px-3 py-4">
+                  <StatusBadge status={item.status} />
+                </td>
 
-          {/* AI CONFIDENCE */}
+                <td className="px-3 py-4 text-[10px] text-slate-600">
+                  {item.time}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
+  );
+}
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5">
+/* =========================
+   RESULT
+========================= */
 
-            <div className="text-2xl">
-              🤖
-            </div>
-
-            <h3 className="mt-3 font-semibold">
-              AI Confidence
-            </h3>
-
-            <p className="mt-2 text-sm leading-6 text-slate-400">
-              Screening results include an AI confidence score.
-            </p>
-
-          </div>
-
-        </section>
-
-        {/* =====================================
-            SCREENING HISTORY
-        ===================================== */}
-
-        <section className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-xl">
-
-          {/* HISTORY HEADER */}
-
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
+function ResultSection({ result }) {
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr]">
+        <Panel>
+          <div className="flex items-center justify-between">
             <div>
-
-              <p className="text-sm font-medium text-blue-400">
-                RECENT ACTIVITY
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Screening Result
               </p>
 
-              <h3 className="mt-1 text-xl font-semibold">
-                Screening History
+              <h3 className="mt-2 text-2xl font-black">
+                {result.status}
               </h3>
-
-              <p className="mt-1 text-sm text-slate-500">
-                Previously analyzed identity documents.
-              </p>
-
             </div>
 
-            {/* SEARCH + FILTER */}
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-full border-4 border-emerald-400/20">
+              <div className="absolute inset-1 rounded-full border-4 border-emerald-400 border-r-transparent" />
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="text-center">
+                <p className="text-xl font-black text-emerald-400">
+                  {result.score}
+                </p>
+                <p className="text-[8px] text-slate-500">SCORE</p>
+              </div>
+            </div>
+          </div>
 
-              {/* SEARCH */}
-
-              <input
-                type="text"
-                value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
-                placeholder="Search document..."
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 sm:w-64"
+          <div className="mt-6 rounded-xl border border-emerald-400/10 bg-emerald-400/[0.04] p-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle2
+                size={18}
+                className="mt-0.5 shrink-0 text-emerald-400"
               />
 
-              {/* FILTER */}
-
-              <select
-                value={filter}
-                onChange={(event) =>
-                  setFilter(event.target.value)
-                }
-                className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-slate-300 outline-none focus:border-blue-500"
-              >
-
-                <option value="All">
-                  All Status
-                </option>
-
-                <option value="Verified">
-                  Verified
-                </option>
-
-                <option value="Suspicious">
-                  Suspicious
-                </option>
-
-                <option value="Fake Detected">
-                  Fake Detected
-                </option>
-
-              </select>
-
+              <p className="text-xs leading-5 text-slate-400">
+                {result.message}
+              </p>
             </div>
-
           </div>
+        </Panel>
 
-          {/* HISTORY TABLE */}
+        <Panel>
+          <p className="text-sm font-bold">Extracted Identity Data</p>
 
-          <div className="mt-6 overflow-x-auto">
-
-            {filteredHistory.length === 0 ? (
-
-              <div className="rounded-xl border border-slate-800 bg-slate-950/50 px-6 py-10 text-center">
-
-                <div className="text-3xl">
-                  🔎
-                </div>
-
-                <p className="mt-3 font-medium text-slate-300">
-                  No documents found
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {Object.entries(result.extractedData).map(([key, value]) => (
+              <div
+                key={key}
+                className="rounded-xl border border-white/5 bg-white/[0.02] p-4"
+              >
+                <p className="text-[9px] uppercase tracking-wider text-slate-600">
+                  {key.replace(/([A-Z])/g, " $1")}
                 </p>
 
-                <p className="mt-1 text-sm text-slate-600">
-                  Try another search or filter.
+                <p className="mt-2 text-xs font-bold text-slate-200">
+                  {value}
                 </p>
-
               </div>
-
-            ) : (
-
-              <table className="w-full min-w-[700px] text-left">
-
-                <thead>
-
-                  <tr className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-500">
-
-                    <th className="px-4 py-4 font-medium">
-                      Document
-                    </th>
-
-                    <th className="px-4 py-4 font-medium">
-                      Type
-                    </th>
-
-                    <th className="px-4 py-4 font-medium">
-                      Status
-                    </th>
-
-                    <th className="px-4 py-4 font-medium">
-                      AI Score
-                    </th>
-
-                    <th className="px-4 py-4 font-medium">
-                      Date
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {filteredHistory.map((item) => (
-
-                    <tr
-                      key={item.id}
-                      className="border-b border-slate-800/70 transition hover:bg-slate-950/60"
-                    >
-
-                      {/* DOCUMENT */}
-
-                      <td className="px-4 py-4">
-
-                        <div className="flex items-center gap-3">
-
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-                            📄
-                          </div>
-
-                          <div>
-
-                            <p className="max-w-[220px] truncate text-sm font-medium text-slate-200">
-                              {item.name}
-                            </p>
-
-                            <p className="text-xs text-slate-600">
-                              Screening ID #{item.id}
-                            </p>
-
-                          </div>
-
-                        </div>
-
-                      </td>
-
-                      {/* TYPE */}
-
-                      <td className="px-4 py-4">
-
-                        <span className="rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1 text-xs text-slate-400">
-                          {item.type}
-                        </span>
-
-                      </td>
-
-                      {/* STATUS */}
-
-                      <td className="px-4 py-4">
-
-                        {item.status === "Verified" && (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400">
-
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-
-                            Verified
-
-                          </span>
-                        )}
-
-                        {item.status === "Suspicious" && (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-yellow-500/10 px-3 py-1.5 text-xs font-medium text-yellow-400">
-
-                            <span className="h-1.5 w-1.5 rounded-full bg-yellow-400"></span>
-
-                            Suspicious
-
-                          </span>
-                        )}
-
-                        {item.status === "Fake Detected" && (
-                          <span className="inline-flex items-center gap-2 rounded-full bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400">
-
-                            <span className="h-1.5 w-1.5 rounded-full bg-red-400"></span>
-
-                            Fake Detected
-
-                          </span>
-                        )}
-
-                      </td>
-
-                      {/* SCORE */}
-
-                      <td className="px-4 py-4">
-
-                        <div className="flex items-center gap-3">
-
-                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-800">
-
-                            <div
-                              className={`h-full rounded-full ${
-                                item.score >= 80
-                                  ? "bg-emerald-500"
-                                  : item.score >= 50
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
-                              }`}
-                              style={{
-                                width: `${item.score}%`,
-                              }}
-                            />
-
-                          </div>
-
-                          <span
-                            className={`text-sm font-semibold ${
-                              item.score >= 80
-                                ? "text-emerald-400"
-                                : item.score >= 50
-                                ? "text-yellow-400"
-                                : "text-red-400"
-                            }`}
-                          >
-                            {item.score}%
-                          </span>
-
-                        </div>
-
-                      </td>
-
-                      {/* DATE */}
-
-                      <td className="px-4 py-4 text-sm text-slate-500">
-                        {item.date}
-                      </td>
-
-                    </tr>
-
-                  ))}
-
-                </tbody>
-
-              </table>
-
-            )}
-
+            ))}
           </div>
+        </Panel>
+      </div>
 
-          {/* HISTORY FOOTER */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Panel>
+          <p className="text-sm font-bold">Forensic Metrics</p>
 
-          <div className="mt-5 flex flex-col gap-2 border-t border-slate-800 pt-4 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-5 grid grid-cols-2 gap-4">
+            <MetricCard
+              icon={FileCheck2}
+              title="Integrity"
+              value={result.forensic.documentIntegrity}
+              suffix="%"
+              compact
+            />
 
-            <span>
-              Showing {filteredHistory.length} of{" "}
-              {history.length} screenings
+            <MetricCard
+              icon={FileText}
+              title="OCR"
+              value={result.forensic.ocrAccuracy}
+              suffix="%"
+              compact
+            />
+
+            <MetricCard
+              icon={Fingerprint}
+              title="Face Match"
+              value={result.forensic.faceMatch}
+              suffix="%"
+              compact
+            />
+
+            <MetricCard
+              icon={Activity}
+              title="Liveness"
+              value={result.forensic.liveness}
+              suffix="%"
+              compact
+            />
+          </div>
+        </Panel>
+
+        <Panel>
+          <p className="text-sm font-bold">AI Findings</p>
+
+          <div className="mt-5 space-y-3">
+            {result.anomalies.map((item, index) => (
+              <Finding
+                key={index}
+                text={item}
+                positive={!item.toLowerCase().includes("alteration")}
+              />
+            ))}
+          </div>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+/* =========================
+   COMPONENTS
+========================= */
+
+function PageHeading({
+  eyebrow,
+  title,
+  description,
+  action,
+}) {
+  return (
+    <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <div className="mb-2 flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+          <p className="text-[10px] font-bold tracking-[0.2em] text-cyan-400">
+            {eyebrow}
+          </p>
+        </div>
+
+        <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
+          {title}
+        </h2>
+
+        <p className="mt-2 max-w-2xl text-sm text-slate-500">
+          {description}
+        </p>
+      </div>
+
+      {action}
+    </div>
+  );
+}
+
+function Panel({ children, className = "" }) {
+  return (
+    <section
+      className={`rounded-2xl border border-white/[0.08] bg-[#0a1020]/80 p-5 shadow-[0_20px_60px_rgba(0,0,0,.18)] backdrop-blur-xl ${className}`}
+    >
+      {children}
+    </section>
+  );
+}
+
+function StatCard({
+  title,
+  value,
+  change,
+  icon: Icon,
+  tone,
+  description,
+}) {
+  const tones = {
+    cyan: "text-cyan-300 bg-cyan-400/10 ring-cyan-400/10",
+    green: "text-emerald-300 bg-emerald-400/10 ring-emerald-400/10",
+    yellow: "text-amber-300 bg-amber-400/10 ring-amber-400/10",
+    red: "text-red-300 bg-red-400/10 ring-red-400/10",
+  };
+
+  return (
+    <div className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a1020]/80 p-5 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/[0.14]">
+      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-cyan-400/5 blur-2xl transition group-hover:bg-cyan-400/10" />
+
+      <div className="relative flex items-start justify-between">
+        <div>
+          <p className="text-xs font-medium text-slate-500">{title}</p>
+          <p className="mt-3 text-3xl font-black tracking-tight">{value}</p>
+
+          <div className="mt-2 flex items-center gap-2">
+            <span className="text-[10px] font-bold text-emerald-400">
+              {change}
             </span>
 
-            <span>
-              AI screening records
+            <span className="text-[10px] text-slate-600">
+              {description}
             </span>
-
           </div>
+        </div>
 
-        </section>
+        <div
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ring-1 ${tones[tone]}`}
+        >
+          <Icon size={20} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
-      </main>
+function MetricCard({
+  icon: Icon,
+  title,
+  value,
+  suffix,
+  compact = false,
+}) {
+  return (
+    <div
+      className={`rounded-xl border border-white/5 bg-white/[0.02] ${
+        compact ? "p-3" : "p-4"
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-slate-500">{title}</span>
+        <Icon size={15} className="text-cyan-400" />
+      </div>
 
+      <div className="mt-3 flex items-end gap-1">
+        <span className={`${compact ? "text-xl" : "text-2xl"} font-black`}>
+          {value}
+        </span>
+        <span className="mb-0.5 text-xs text-slate-600">{suffix}</span>
+      </div>
+
+      <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/5">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RiskCard({
+  title,
+  value,
+  count,
+  tone,
+  icon: Icon,
+}) {
+  const styles = {
+    green: "border-emerald-400/10 bg-emerald-400/[0.035] text-emerald-400",
+    yellow: "border-amber-400/10 bg-amber-400/[0.035] text-amber-400",
+    red: "border-red-400/10 bg-red-400/[0.035] text-red-400",
+  };
+
+  return (
+    <div className={`rounded-2xl border p-5 ${styles[tone]}`}>
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-xs text-slate-500">{title}</p>
+          <p className="mt-3 text-3xl font-black">{value}</p>
+          <p className="mt-1 text-[10px] text-slate-600">{count}</p>
+        </div>
+
+        <Icon size={21} />
+      </div>
+    </div>
+  );
+}
+
+function RiskFactor({ title, value }) {
+  return (
+    <div>
+      <div className="mb-2 flex justify-between">
+        <span className="text-xs text-slate-400">{title}</span>
+        <span className="text-[10px] font-bold text-slate-500">
+          {value}%
+        </span>
+      </div>
+
+      <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SystemStatus({
+  icon: Icon,
+  name,
+  status,
+  value,
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5">
+        <Icon size={16} className="text-slate-400" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold">{name}</p>
+        <p className="mt-1 text-[10px] text-emerald-400">{status}</p>
+      </div>
+
+      <span className="text-[10px] font-bold text-slate-500">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function PipelineStep({
+  number,
+  icon: Icon,
+  title,
+  description,
+}) {
+  return (
+    <div className="flex gap-4">
+      <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/10 bg-cyan-400/5">
+        <Icon size={17} className="text-cyan-300" />
+
+        <span className="absolute -right-2 -top-2 rounded-md bg-[#0a1020] px-1.5 text-[8px] font-bold text-slate-600">
+          {number}
+        </span>
+      </div>
+
+      <div>
+        <p className="text-xs font-bold">{title}</p>
+        <p className="mt-1 text-[10px] leading-4 text-slate-600">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function LegendDot({ color, label }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={`h-2 w-2 rounded-full ${color}`} />
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function StatusBadge({ status }) {
+  const styles = {
+    Verified:
+      "border-emerald-400/20 bg-emerald-400/5 text-emerald-300",
+    Suspicious:
+      "border-amber-400/20 bg-amber-400/5 text-amber-300",
+    "Fake Detected":
+      "border-red-400/20 bg-red-400/5 text-red-300",
+  };
+
+  return (
+    <span
+      className={`inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-[9px] font-bold ${styles[status]}`}
+    >
+      {status}
+    </span>
+  );
+}
+
+function Finding({ text, positive }) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3">
+      {positive ? (
+        <CheckCircle2
+          size={16}
+          className="mt-0.5 shrink-0 text-emerald-400"
+        />
+      ) : (
+        <AlertTriangle
+          size={16}
+          className="mt-0.5 shrink-0 text-amber-400"
+        />
+      )}
+
+      <p className="text-xs leading-5 text-slate-400">{text}</p>
+    </div>
+  );
+}
+
+function CheckRow({ title, value }) {
+  return (
+    <div className="flex items-center justify-between border-b border-white/5 pb-3 last:border-0">
+      <div className="flex items-center gap-2">
+        <CheckCircle2 size={14} className="text-emerald-400" />
+        <span className="text-xs text-slate-400">{title}</span>
+      </div>
+
+      <span className="text-[10px] font-bold text-emerald-400">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function SettingRow({
+  icon: Icon,
+  title,
+  description,
+  enabled,
+}) {
+  return (
+    <div className="flex items-center gap-4 border-b border-white/5 py-5 last:border-0">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/5">
+        <Icon size={18} className="text-cyan-300" />
+      </div>
+
+      <div className="flex-1">
+        <p className="text-xs font-bold">{title}</p>
+        <p className="mt-1 text-[10px] text-slate-600">{description}</p>
+      </div>
+
+      <div
+        className={`h-6 w-11 rounded-full p-1 transition ${
+          enabled ? "bg-cyan-400" : "bg-white/10"
+        }`}
+      >
+        <div
+          className={`h-4 w-4 rounded-full bg-white transition ${
+            enabled ? "ml-5" : "ml-0"
+          }`}
+        />
+      </div>
     </div>
   );
 }
