@@ -1984,104 +1984,118 @@ function HeatLegend({ label, type }) {
 
 function InvestigationPage({ history }) {
   const [selectedCase, setSelectedCase] = useState(null);
+  const [queueFilter, setQueueFilter] = useState("All");
+  const [reviewedCases, setReviewedCases] = useState([]);
 
   const cases = history
     .filter((item) => item.status !== "Verified")
-    .map((item, index) => ({
-      ...item,
-      caseId: `CASE-${1048 - index * 7}`,
-      risk: Math.max(1, 100 - item.score),
-      priority: item.status === "Fake Detected" ? "Critical" : "High",
-      signal:
-        item.status === "Fake Detected"
-          ? "Image Tampering"
-          : "Face / Document Anomaly",
-      analyst: index === 0 ? "Unassigned" : "Security Analyst",
-    }));
+    .map((item, index) => {
+      const risk = Math.max(1, Math.min(100, 100 - item.score));
+      const critical = item.status === "Fake Detected" || risk >= 60;
 
-  const openCases = cases.length;
+      return {
+        ...item,
+        caseId: `INV-${String(1048 - index * 7).padStart(4, "0")}`,
+        risk,
+        priority: critical ? "Critical" : "High",
+        signal: critical
+          ? "Potential document manipulation"
+          : "Identity consistency requires review",
+        analyst: ["Unassigned", "Fraud Review Desk", "Identity Ops"][index % 3],
+        evidenceCount: critical ? 4 : 3,
+      };
+    });
+
+  const filteredCases = cases.filter((item) => {
+    if (queueFilter === "High Risk") return item.risk >= 40;
+    if (queueFilter === "Critical") return item.priority === "Critical";
+    if (queueFilter === "Unreviewed") return !reviewedCases.includes(item.caseId);
+    return true;
+  });
+
+  const openCases = cases.filter((item) => !reviewedCases.includes(item.caseId)).length;
   const criticalCases = cases.filter((item) => item.priority === "Critical").length;
   const highCases = cases.filter((item) => item.priority === "High").length;
+
+  const toggleReviewed = (caseId) => {
+    setReviewedCases((current) =>
+      current.includes(caseId)
+        ? current.filter((id) => id !== caseId)
+        : [...current, caseId]
+    );
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-7">
       <PageHeading
         eyebrow="CASE MANAGEMENT"
         title="Investigation Center"
-        description="Review suspicious screening cases, inspect evidence and prioritize manual investigation."
+        description="Prioritize suspicious screening cases, inspect AI evidence and prepare cases for manual review."
         action={
           <div className="flex items-center gap-2 rounded-full border border-cyan-400/15 bg-cyan-400/[0.04] px-3 py-2">
             <Activity size={14} className="text-cyan-300" />
             <span className="text-[9px] font-bold tracking-wider text-cyan-300">
-              LIVE CASE QUEUE
+              LOCAL DEMO QUEUE
             </span>
           </div>
         }
       />
 
-      {/* CASE SUMMARY */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <InvestigationStat
-          title="Open Cases"
-          value={openCases}
-          description="Awaiting analyst review"
-          icon={FolderSearch}
-          tone="cyan"
-        />
-
-        <InvestigationStat
-          title="Critical Cases"
-          value={criticalCases}
-          description="Immediate attention"
-          icon={XCircle}
-          tone="red"
-        />
-
-        <InvestigationStat
-          title="High Priority"
-          value={highCases}
-          description="Elevated risk cases"
-          icon={AlertTriangle}
-          tone="yellow"
-        />
-
-        <InvestigationStat
-          title="Evidence Sources"
-          value="06"
-          description="AI signals available"
-          icon={Database}
-          tone="green"
-        />
+        <InvestigationStat title="Open Cases" value={openCases} description="Awaiting analyst review" icon={FolderSearch} tone="cyan" />
+        <InvestigationStat title="Critical Cases" value={criticalCases} description="Immediate attention" icon={XCircle} tone="red" />
+        <InvestigationStat title="High Priority" value={highCases} description="Elevated risk cases" icon={AlertTriangle} tone="yellow" />
+        <InvestigationStat title="Evidence Sources" value="06" description="AI signals available" icon={Database} tone="green" />
       </div>
 
-      {/* QUEUE */}
       <Panel>
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-sm font-bold">Investigation Queue</p>
             <p className="mt-1 text-xs text-slate-500">
-              Suspicious and fake documents requiring analyst attention
+              Suspicious and fake screening results requiring analyst attention
             </p>
           </div>
 
-          <span className="rounded-full border border-amber-400/20 bg-amber-400/5 px-3 py-1.5 text-[10px] font-bold text-amber-300">
-            {openCases} OPEN CASES
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {["All", "High Risk", "Critical", "Unreviewed"].map((filterName) => (
+              <button
+                key={filterName}
+                type="button"
+                onClick={() => setQueueFilter(filterName)}
+                className={`rounded-lg border px-3 py-2 text-[9px] font-bold transition ${
+                  queueFilter === filterName
+                    ? "border-cyan-400/25 bg-cyan-400/10 text-cyan-300"
+                    : "border-white/10 bg-white/[0.02] text-slate-500 hover:bg-white/[0.04] hover:text-slate-300"
+                }`}
+              >
+                {filterName}
+              </button>
+            ))}
+          </div>
         </div>
 
         {cases.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-12 text-center">
             <CheckCircle2 className="mx-auto text-emerald-400" size={35} />
-            <p className="mt-4 text-sm font-bold text-white">
-              No active investigation cases
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              All currently screened documents are marked as verified.
-            </p>
+            <p className="mt-4 text-sm font-bold text-white">No active investigation cases</p>
+            <p className="mt-1 text-xs text-slate-500">All currently screened documents are marked as verified.</p>
+          </div>
+        ) : filteredCases.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-10 text-center">
+            <Search className="mx-auto text-slate-500" size={28} />
+            <p className="mt-3 text-sm font-bold text-white">No cases match this filter</p>
+            <button
+              type="button"
+              onClick={() => setQueueFilter("All")}
+              className="mt-3 text-[10px] font-bold text-cyan-300 hover:text-cyan-200"
+            >
+              Clear filter
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[850px] text-left">
+            <table className="w-full min-w-[900px] text-left">
               <thead>
                 <tr className="border-b border-white/10 text-[10px] uppercase tracking-wider text-slate-600">
                   <th className="px-4 py-3">Case</th>
@@ -2089,99 +2103,79 @@ function InvestigationPage({ history }) {
                   <th className="px-4 py-3">Signal</th>
                   <th className="px-4 py-3">Risk</th>
                   <th className="px-4 py-3">Priority</th>
-                  <th className="px-4 py-3">Analyst</th>
+                  <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3 text-right">Action</th>
                 </tr>
               </thead>
-
               <tbody>
-                {cases.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-white/5 last:border-0 transition hover:bg-white/[0.02]"
-                  >
-                    <td className="px-4 py-4 font-mono text-xs text-cyan-300">
-                      {item.caseId}
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-400/10">
-                          <FileText size={16} className="text-red-300" />
+                {filteredCases.map((item) => {
+                  const reviewed = reviewedCases.includes(item.caseId);
+                  return (
+                    <tr key={item.caseId} className="border-b border-white/5 last:border-0 transition hover:bg-white/[0.02]">
+                      <td className="px-4 py-4 font-mono text-xs text-cyan-300">{item.caseId}</td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-400/10">
+                            <FileText size={16} className="text-red-300" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="max-w-[180px] truncate text-xs font-semibold text-white">{item.file}</p>
+                            <p className="mt-0.5 text-[9px] text-slate-600">{item.type} • score {item.score}%</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="max-w-[190px] truncate text-xs font-semibold text-white">
-                            {item.file}
-                          </p>
-                          <p className="mt-0.5 text-[9px] text-slate-600">
-                            {item.type}
-                          </p>
+                      </td>
+                      <td className="px-4 py-4 text-xs text-slate-400">{item.signal}</td>
+                      <td className="px-4 py-4">
+                        <div className="w-24">
+                          <div className="flex items-center justify-between text-[9px]">
+                            <span className="font-black text-red-300">{item.risk}</span>
+                            <span className="text-slate-600">/100</span>
+                          </div>
+                          <div className="mt-1 h-1 overflow-hidden rounded-full bg-white/5">
+                            <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500" style={{ width: `${item.risk}%` }} />
+                          </div>
                         </div>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <span className="text-xs text-slate-400">
-                        {item.signal}
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <span className="text-xs font-black text-red-300">
-                        {item.risk}/100
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <CasePriorityBadge priority={item.priority} />
-                    </td>
-
-                    <td className="px-4 py-4 text-xs text-slate-500">
-                      {item.analyst}
-                    </td>
-
-                    <td className="px-4 py-4 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedCase(item)}
-                        className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[10px] font-bold text-slate-300 transition hover:border-cyan-400/20 hover:bg-cyan-400/[0.05] hover:text-cyan-300"
-                      >
-                        Review Case
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-4 py-4"><CasePriorityBadge priority={item.priority} /></td>
+                      <td className="px-4 py-4">
+                        <span className={`inline-flex items-center gap-1.5 text-[9px] font-bold ${reviewed ? "text-emerald-300" : "text-amber-300"}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${reviewed ? "bg-emerald-400" : "bg-amber-400"}`} />
+                          {reviewed ? "Reviewed" : "Pending"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCase(item)}
+                          className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[10px] font-bold text-slate-300 transition hover:border-cyan-400/20 hover:bg-cyan-400/[0.05] hover:text-cyan-300"
+                        >
+                          Review Case
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </Panel>
 
-      {/* CASE DETAIL */}
       {selectedCase && (
         <Panel className="overflow-hidden border-cyan-400/15">
           <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-sm font-black text-cyan-300">
-                  {selectedCase.caseId}
-                </span>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="font-mono text-sm font-black text-cyan-300">{selectedCase.caseId}</span>
                 <CasePriorityBadge priority={selectedCase.priority} />
+                <span className="rounded-full border border-white/10 px-2.5 py-1 text-[9px] font-bold text-slate-500">
+                  {reviewedCases.includes(selectedCase.caseId) ? "REVIEWED" : "PENDING REVIEW"}
+                </span>
               </div>
-              <p className="mt-2 text-lg font-bold text-white">
-                {selectedCase.file}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Investigation detail and AI-generated evidence summary
-              </p>
+              <p className="mt-2 text-lg font-bold text-white">{selectedCase.file}</p>
+              <p className="mt-1 text-xs text-slate-500">Case evidence workspace • frontend demo data only</p>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setSelectedCase(null)}
-              className="self-start rounded-lg border border-white/10 p-2 text-slate-500 transition hover:bg-white/5 hover:text-white sm:self-auto"
-              aria-label="Close case details"
-            >
+            <button type="button" onClick={() => setSelectedCase(null)} className="self-start rounded-lg border border-white/10 p-2 text-slate-500 transition hover:bg-white/5 hover:text-white sm:self-auto" aria-label="Close case details">
               <X size={17} />
             </button>
           </div>
@@ -2189,112 +2183,69 @@ function InvestigationPage({ history }) {
           <div className="mt-5 grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
             <div className="space-y-4">
               <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                  Case Risk
-                </p>
-
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Case Risk Score</p>
+                  <Gauge size={17} className="text-red-300" />
+                </div>
                 <div className="mt-4 flex items-end gap-2">
-                  <span className="text-4xl font-black text-red-300">
-                    {selectedCase.risk}
-                  </span>
-                  <span className="mb-1 text-xs text-slate-600">
-                    / 100
-                  </span>
+                  <span className="text-4xl font-black text-red-300">{selectedCase.risk}</span>
+                  <span className="mb-1 text-xs text-slate-600">/ 100</span>
                 </div>
-
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/5">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500"
-                    style={{ width: `${selectedCase.risk}%` }}
-                  />
+                  <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-red-500" style={{ width: `${selectedCase.risk}%` }} />
                 </div>
+                <div className="mt-3 flex justify-between text-[9px] text-slate-600"><span>LOW</span><span>MEDIUM</span><span>HIGH</span></div>
               </div>
 
               <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
-                  Document Details
-                </p>
-
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Case Details</p>
                 <div className="mt-5 space-y-4">
-                  <InvestigationDetail
-                    label="Document Type"
-                    value={selectedCase.type}
-                  />
-                  <InvestigationDetail
-                    label="Screening Score"
-                    value={`${selectedCase.score}%`}
-                  />
-                  <InvestigationDetail
-                    label="Primary Signal"
-                    value={selectedCase.signal}
-                  />
-                  <InvestigationDetail
-                    label="Current Status"
-                    value={selectedCase.status}
-                  />
-                  <InvestigationDetail
-                    label="Assigned Analyst"
-                    value={selectedCase.analyst}
-                  />
+                  <InvestigationDetail label="Document Type" value={selectedCase.type} />
+                  <InvestigationDetail label="Screening Score" value={`${selectedCase.score}%`} />
+                  <InvestigationDetail label="Primary Signal" value={selectedCase.signal} />
+                  <InvestigationDetail label="Assigned Analyst" value={selectedCase.analyst} />
+                  <InvestigationDetail label="Evidence Sources" value={`${selectedCase.evidenceCount} AI signals`} />
+                  <InvestigationDetail label="Reference" value={`DOC-••••-${String(selectedCase.id).padStart(4, "0")}`} />
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => toggleReviewed(selectedCase.caseId)}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-[10px] font-bold transition ${
+                  reviewedCases.includes(selectedCase.caseId)
+                    ? "border-amber-400/20 bg-amber-400/5 text-amber-300 hover:bg-amber-400/10"
+                    : "border-emerald-400/20 bg-emerald-400/5 text-emerald-300 hover:bg-emerald-400/10"
+                }`}
+              >
+                <CheckCircle2 size={15} />
+                {reviewedCases.includes(selectedCase.caseId) ? "Mark as Pending" : "Mark as Reviewed"}
+              </button>
             </div>
 
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-white">
-                    Evidence & AI Signals
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Signals that contributed to the investigation priority
-                  </p>
+                  <p className="text-sm font-bold text-white">Evidence & AI Signals</p>
+                  <p className="mt-1 text-xs text-slate-500">Frontend visualization of the signals associated with this case</p>
                 </div>
                 <BrainCircuit size={20} className="text-cyan-300" />
               </div>
 
               <div className="mt-5 space-y-3">
-                <EvidenceSignal
-                  icon={FileSearch}
-                  title="Visual Manipulation Analysis"
-                  value="Elevated"
-                  description="Image and layout regions require additional review."
-                  danger
-                />
-
-                <EvidenceSignal
-                  icon={FileText}
-                  title="OCR Consistency"
-                  value="Review"
-                  description="Extracted text should be compared against trusted records."
-                />
-
-                <EvidenceSignal
-                  icon={Fingerprint}
-                  title="Biometric Signal"
-                  value={selectedCase.status === "Fake Detected" ? "Mismatch Risk" : "Attention"}
-                  description="Biometric evidence should be validated before final disposition."
-                  danger={selectedCase.status === "Fake Detected"}
-                />
-
-                <EvidenceSignal
-                  icon={Database}
-                  title="External Identity Check"
-                  value="Pending"
-                  description="External database verification is not connected in demo mode."
-                />
+                <EvidenceSignal icon={FileSearch} title="Visual Manipulation Analysis" value={selectedCase.priority === "Critical" ? "Elevated" : "Review"} description="Document image and layout regions should receive additional manual inspection." danger={selectedCase.priority === "Critical"} />
+                <EvidenceSignal icon={FileText} title="OCR Consistency" value={selectedCase.score < 75 ? "Review" : "Stable"} description="Compare extracted text with trusted identity records before final disposition." />
+                <EvidenceSignal icon={Fingerprint} title="Biometric Signal" value={selectedCase.status === "Fake Detected" ? "Mismatch Risk" : "Attention"} description="Biometric evidence should be validated before closing the case." danger={selectedCase.status === "Fake Detected"} />
+                <EvidenceSignal icon={Database} title="External Identity Check" value="Pending" description="External database verification is intentionally not connected in this frontend-only phase." />
               </div>
 
               <div className="mt-5 rounded-xl border border-amber-400/10 bg-amber-400/[0.035] p-4">
                 <div className="flex gap-3">
                   <AlertTriangle size={17} className="mt-0.5 shrink-0 text-amber-400" />
                   <div>
-                    <p className="text-xs font-bold text-amber-300">
-                      Analyst Recommendation
-                    </p>
+                    <p className="text-xs font-bold text-amber-300">Investigation Recommendation</p>
                     <p className="mt-1 text-[10px] leading-5 text-slate-500">
-                      Review the highlighted document regions and verify identity
-                      information against trusted backend sources before closing the case.
+                      Review highlighted document regions, validate identity information against trusted sources and record the final disposition only after manual verification.
                     </p>
                   </div>
                 </div>
