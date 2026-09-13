@@ -556,200 +556,131 @@ function Header({
 ========================= */
 
 function Dashboard({ navigate, history, scanResult }) {
+  const [activityView, setActivityView] = useState("All");
+
+  const verifiedCount = history.filter((item) => item.status === "Verified").length;
+  const suspiciousCount = history.filter((item) => item.status === "Suspicious").length;
+  const fakeCount = history.filter((item) => item.status === "Fake Detected").length;
+  const reviewCount = suspiciousCount + fakeCount;
+
+  const visibleActivity = activityView === "All"
+    ? activityData
+    : activityData.map((item) => ({
+        ...item,
+        verified: activityView === "Verified" ? item.verified : 0,
+        suspicious: activityView === "Suspicious" ? item.suspicious : 0,
+        fake: activityView === "Fake" ? item.fake : 0,
+      }));
+
   return (
     <div className="mx-auto max-w-[1600px] space-y-7">
       <PageHeading
-        eyebrow="SECURITY OVERVIEW"
+        eyebrow="SECURITY COMMAND CENTER"
         title="Identity Screening Dashboard"
-        description="Monitor document authenticity, risk signals and verification activity."
+        description="Monitor document authenticity, risk signals and verification operations from one workspace."
         action={
-          <button
-            onClick={() => navigate("Document Upload")}
-            className="flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-[0_0_25px_rgba(34,211,238,.18)] transition hover:bg-cyan-300"
-          >
-            <UploadCloud size={17} />
-            New Screening
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => navigate("Risk Dashboard")}
+              className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/20 hover:bg-cyan-400/[0.06]"
+            >
+              <Gauge size={17} />
+              Risk Center
+            </button>
+            <button
+              onClick={() => navigate("Document Upload")}
+              className="flex items-center gap-2 rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950 shadow-[0_0_25px_rgba(34,211,238,.18)] transition hover:bg-cyan-300"
+            >
+              <UploadCloud size={17} />
+              New Screening
+            </button>
+          </div>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Documents Screened"
-          value="1,284"
-          change="+12.8%"
-          icon={FileCheck2}
-          tone="cyan"
-          description="vs. last 30 days"
-        />
-
-        <StatCard
-          title="Verified Documents"
-          value="1,071"
-          change="+8.4%"
-          icon={ShieldCheck}
-          tone="green"
-          description="83.4% verification rate"
-        />
-
-        <StatCard
-          title="Suspicious Cases"
-          value="142"
-          change="+4.2%"
-          icon={AlertTriangle}
-          tone="yellow"
-          description="Requires review"
-        />
-
-        <StatCard
-          title="Fake Detected"
-          value="71"
-          change="+2.1%"
-          icon={XCircle}
-          tone="red"
-          description="Blocked by AI engine"
-        />
+        <StatCard title="Documents Screened" value="1,284" change="+12.8%" icon={FileCheck2} tone="cyan" description="vs. last 30 days" />
+        <StatCard title="Verified Documents" value="1,071" change="+8.4%" icon={ShieldCheck} tone="green" description={`${verifiedCount} visible in current queue`} />
+        <StatCard title="Cases Requiring Review" value="142" change="+4.2%" icon={AlertTriangle} tone="yellow" description={`${reviewCount} demo records need attention`} />
+        <StatCard title="Fake Detected" value="71" change="+2.1%" icon={XCircle} tone="red" description={`${fakeCount} visible in current queue`} />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.7fr_1fr]">
         <Panel>
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-bold">Screening Activity</p>
-              <p className="mt-1 text-xs text-slate-500">
-                Verification activity over the last 7 days
-              </p>
+              <p className="mt-1 text-xs text-slate-500">Verification activity over the last 7 days</p>
             </div>
+            <div className="flex flex-wrap gap-1 rounded-xl border border-white/10 bg-white/[0.02] p-1">
+              {["All", "Verified", "Suspicious", "Fake"].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setActivityView(item)}
+                  className={`rounded-lg px-3 py-1.5 text-[10px] font-bold transition ${activityView === item ? "bg-cyan-400/10 text-cyan-300" : "text-slate-500 hover:text-white"}`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
 
-            <div className="flex items-center gap-3 text-[10px] text-slate-500">
-              <LegendDot color="bg-emerald-400" label="Verified" />
-              <LegendDot color="bg-amber-400" label="Suspicious" />
-              <LegendDot color="bg-red-400" label="Fake" />
-            </div>
+          <div className="mb-4 flex flex-wrap items-center gap-4 text-[10px] text-slate-500">
+            <LegendDot color="bg-emerald-400" label="Verified" />
+            <LegendDot color="bg-amber-400" label="Suspicious" />
+            <LegendDot color="bg-red-400" label="Fake" />
           </div>
 
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={activityData}>
+              <AreaChart data={visibleActivity}>
                 <defs>
-                  <linearGradient id="verifiedGradient" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="verifiedGradientDashboard" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.25} />
                     <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="rgba(255,255,255,.05)"
-                />
-
-                <XAxis
-                  dataKey="day"
-                  tick={{ fill: "#64748b", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <YAxis
-                  tick={{ fill: "#64748b", fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <Tooltip
-                  contentStyle={{
-                    background: "#0b1224",
-                    border: "1px solid rgba(255,255,255,.1)",
-                    borderRadius: 12,
-                    color: "#fff",
-                    fontSize: 12,
-                  }}
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="verified"
-                  stroke="#22d3ee"
-                  strokeWidth={2}
-                  fill="url(#verifiedGradient)"
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="suspicious"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  fill="transparent"
-                />
-
-                <Area
-                  type="monotone"
-                  dataKey="fake"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  fill="transparent"
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.05)" />
+                <XAxis dataKey="day" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ background: "#0b1224", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, color: "#fff", fontSize: 12 }} />
+                <Area type="monotone" dataKey="verified" stroke="#22d3ee" strokeWidth={2} fill="url(#verifiedGradientDashboard)" />
+                <Area type="monotone" dataKey="suspicious" stroke="#f59e0b" strokeWidth={2} fill="transparent" />
+                <Area type="monotone" dataKey="fake" stroke="#ef4444" strokeWidth={2} fill="transparent" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </Panel>
 
         <Panel>
-          <div className="mb-4">
-            <p className="text-sm font-bold">Risk Distribution</p>
-            <p className="mt-1 text-xs text-slate-500">
-              Current screening risk profile
-            </p>
+          <div className="mb-5 flex items-start justify-between">
+            <div>
+              <p className="text-sm font-bold">Threat Posture</p>
+              <p className="mt-1 text-xs text-slate-500">Current screening risk profile</p>
+            </div>
+            <ShieldCheck className="text-emerald-400" size={19} />
           </div>
 
-          <div className="relative h-[220px]">
+          <div className="relative h-[205px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie
-                  data={riskData}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={62}
-                  outerRadius={88}
-                  paddingAngle={4}
-                  stroke="none"
-                >
-                  {riskData.map((_, index) => (
-                    <Cell key={index} fill={COLORS[index]} />
-                  ))}
+                <Pie data={riskData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={84} paddingAngle={4} stroke="none">
+                  {riskData.map((_, index) => <Cell key={index} fill={COLORS[index]} />)}
                 </Pie>
-
-                <Tooltip
-                  contentStyle={{
-                    background: "#0b1224",
-                    border: "1px solid rgba(255,255,255,.1)",
-                    borderRadius: 12,
-                    fontSize: 12,
-                  }}
-                />
+                <Tooltip contentStyle={{ background: "#0b1224", border: "1px solid rgba(255,255,255,.1)", borderRadius: 12, fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
-
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-black">71%</span>
-              <span className="text-[10px] uppercase tracking-wider text-slate-500">
-                Low Risk
-              </span>
+              <span className="text-[10px] uppercase tracking-wider text-emerald-400">Low Risk</span>
             </div>
           </div>
 
           <div className="space-y-3">
             {riskData.map((item, index) => (
               <div key={item.name} className="flex items-center gap-3">
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{ background: COLORS[index] }}
-                />
-
-                <span className="flex-1 text-xs text-slate-400">
-                  {item.name}
-                </span>
-
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS[index] }} />
+                <span className="flex-1 text-xs text-slate-400">{item.name}</span>
                 <span className="text-xs font-bold">{item.value}%</span>
               </div>
             ))}
@@ -758,70 +689,94 @@ function Dashboard({ navigate, history, scanResult }) {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.45fr_1fr]">
-        <RecentScreenings history={history} />
+        <Panel>
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">Recent Screening Queue</p>
+              <p className="mt-1 text-xs text-slate-500">Latest documents and their current AI status</p>
+            </div>
+            <button onClick={() => navigate("Investigation")} className="text-[11px] font-bold text-cyan-300 hover:text-cyan-200">
+              Open Investigation →
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {history.slice(0, 5).map((item) => (
+              <button
+                key={item.id}
+                onClick={() => navigate(item.status === "Verified" ? "Verification" : "Investigation")}
+                className="flex w-full items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.015] p-3 text-left transition hover:border-cyan-400/15 hover:bg-cyan-400/[0.03]"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.04]">
+                  <FileText size={16} className="text-slate-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold text-slate-200">{item.file}</p>
+                  <p className="mt-1 text-[10px] text-slate-500">{item.type} • {item.time}</p>
+                </div>
+                <StatusBadge status={item.status} />
+                <ChevronRight size={15} className="shrink-0 text-slate-600" />
+              </button>
+            ))}
+          </div>
+        </Panel>
 
         <Panel>
           <div className="mb-5 flex items-center justify-between">
             <div>
               <p className="text-sm font-bold">AI Engine Status</p>
-              <p className="mt-1 text-xs text-slate-500">
-                Current system diagnostics
-              </p>
+              <p className="mt-1 text-xs text-slate-500">Current system diagnostics</p>
             </div>
-
             <Activity className="text-emerald-400" size={19} />
           </div>
-
-          <div className="space-y-4">
-            <SystemStatus
-              icon={BrainCircuit}
-              name="AI Screening Engine"
-              status="Operational"
-              value="99.8%"
-            />
-
-            <SystemStatus
-              icon={FileText}
-              name="OCR Extraction"
-              status="Operational"
-              value="98.6%"
-            />
-
-            <SystemStatus
-              icon={Fingerprint}
-              name="Biometric Matching"
-              status="Operational"
-              value="97.9%"
-            />
-
-            <SystemStatus
-              icon={Database}
-              name="Identity Database"
-              status="Connected"
-              value="24ms"
-            />
+          <div className="space-y-3">
+            <SystemStatus icon={BrainCircuit} name="AI Screening Engine" status="Operational" value="99.8%" />
+            <SystemStatus icon={FileText} name="OCR Extraction" status="Operational" value="98.6%" />
+            <SystemStatus icon={Fingerprint} name="Biometric Matching" status="Operational" value="97.9%" />
+            <SystemStatus icon={Database} name="Identity Database" status="Connected" value="24ms" />
           </div>
-
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button onClick={() => navigate("Forensic Analysis")} className="rounded-xl border border-white/10 bg-white/[0.025] p-3 text-left transition hover:border-cyan-400/20">
+              <FileSearch size={16} className="text-cyan-300" />
+              <p className="mt-2 text-xs font-bold">Forensic Analysis</p>
+              <p className="mt-1 text-[10px] text-slate-500">Inspect document signals</p>
+            </button>
+            <button onClick={() => navigate("Audit Logs")} className="rounded-xl border border-white/10 bg-white/[0.025] p-3 text-left transition hover:border-cyan-400/20">
+              <History size={16} className="text-cyan-300" />
+              <p className="mt-2 text-xs font-bold">Audit Logs</p>
+              <p className="mt-1 text-[10px] text-slate-500">Review security events</p>
+            </button>
+          </div>
           {scanResult && (
-            <div className="mt-5 rounded-xl border border-cyan-400/10 bg-cyan-400/[0.04] p-4">
+            <div className="mt-4 rounded-xl border border-cyan-400/10 bg-cyan-400/[0.04] p-4">
               <div className="flex items-center gap-2 text-cyan-300">
                 <Sparkles size={16} />
-                <span className="text-xs font-bold">
-                  Latest Screening Result
-                </span>
+                <span className="text-xs font-bold">Latest Screening Result</span>
               </div>
-
-              <div className="mt-2 flex items-center justify-between">
-                <span className="truncate text-xs text-slate-400">
-                  {scanResult.extractedData.documentType}
-                </span>
-                <span className="font-bold text-emerald-400">
-                  {scanResult.score}%
-                </span>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <span className="truncate text-xs text-slate-400">{scanResult.extractedData.documentType}</span>
+                <span className="font-bold text-emerald-400">{scanResult.score}%</span>
               </div>
             </div>
           )}
         </Panel>
+      </div>
+
+      <div className="rounded-2xl border border-cyan-400/10 bg-gradient-to-r from-cyan-400/[0.06] via-blue-500/[0.03] to-transparent p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/10">
+              <LockKeyhole size={18} className="text-cyan-300" />
+            </div>
+            <div>
+              <p className="text-sm font-bold">Secure Screening Workspace</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">Demo analytics are displayed locally. Connect your approved backend only when the verification APIs are ready.</p>
+            </div>
+          </div>
+          <button onClick={() => navigate("Settings")} className="shrink-0 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-bold text-slate-200 hover:bg-white/[0.07]">
+            System Settings
+          </button>
+        </div>
       </div>
     </div>
   );
