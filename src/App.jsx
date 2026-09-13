@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -34,6 +34,7 @@ import {
   Menu,
   Search,
   Settings,
+  RefreshCw,
   Shield,
   ShieldCheck,
   Sparkles,
