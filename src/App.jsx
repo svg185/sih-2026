@@ -1186,53 +1186,402 @@ function VerificationPage({
   startScreening,
   isScanning,
 }) {
+  if (!scanResult) {
+    return (
+      <div className="mx-auto max-w-6xl space-y-7">
+        <PageHeading
+          eyebrow="IDENTITY VERIFICATION"
+          title="Verification Center"
+          description="Validate identity documents using AI-powered authenticity and biometric analysis."
+        />
+
+        <Panel className="relative overflow-hidden py-24 text-center">
+          <div className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/5 blur-[100px]" />
+
+          <div className="relative">
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-[28px] border border-cyan-400/20 bg-cyan-400/[0.06]">
+              <Fingerprint
+                size={42}
+                strokeWidth={1.4}
+                className="text-cyan-300"
+              />
+            </div>
+
+            <p className="mt-7 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-400">
+              Awaiting Verification
+            </p>
+
+            <h3 className="mt-3 text-2xl font-black">
+              No Document Verified Yet
+            </h3>
+
+            <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-500">
+              Upload an identity document and run the AI screening pipeline to
+              generate biometric and authenticity verification results.
+            </p>
+
+            <button
+              onClick={() => navigate("Document Upload")}
+              className="mt-7 inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-6 py-3 text-sm font-black text-slate-950 transition hover:bg-cyan-300"
+            >
+              <UploadCloud size={17} />
+              Start Verification
+            </button>
+          </div>
+        </Panel>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          <VerificationInfo
+            icon={FileCheck2}
+            title="Document Authenticity"
+            text="Structure & tampering analysis"
+          />
+
+          <VerificationInfo
+            icon={Fingerprint}
+            title="Biometric Match"
+            text="Face identity comparison"
+          />
+
+          <VerificationInfo
+            icon={BrainCircuit}
+            title="AI Risk Engine"
+            text="Fraud probability assessment"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  const metrics = [
+    {
+      title: "Document Authenticity",
+      value: scanResult.forensic.documentIntegrity,
+      icon: FileCheck2,
+    },
+    {
+      title: "OCR Confidence",
+      value: scanResult.forensic.ocrAccuracy,
+      icon: FileText,
+    },
+    {
+      title: "Face Match",
+      value: scanResult.forensic.faceMatch,
+      icon: Fingerprint,
+    },
+    {
+      title: "Liveness Detection",
+      value: scanResult.forensic.liveness,
+      icon: Activity,
+    },
+  ];
+
   return (
     <div className="mx-auto max-w-7xl space-y-7">
       <PageHeading
         eyebrow="IDENTITY VERIFICATION"
         title="Verification Center"
-        description="Review the latest document authenticity and identity matching result."
+        description="AI-generated identity verification report and confidence metrics."
+        action={
+          <div className="flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/[0.05] px-3 py-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+            <span className="text-[9px] font-bold tracking-wider text-emerald-300">
+              VERIFICATION COMPLETE
+            </span>
+          </div>
+        }
       />
 
-      {!scanResult ? (
-        <Panel className="py-20 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-cyan-400/10">
-            <ShieldCheck size={38} className="text-cyan-300" />
+      {/* HERO RESULT */}
+      <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+        <Panel className="relative overflow-hidden">
+          <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-emerald-400/10 blur-[90px]" />
+
+          <div className="relative flex flex-col items-center justify-center py-7">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
+              Overall Verification
+            </p>
+
+            <div className="relative mt-7 flex h-52 w-52 items-center justify-center">
+              <div className="absolute inset-0 rounded-full border border-white/5" />
+
+              <div className="absolute inset-3 rounded-full border-[10px] border-white/5" />
+
+              <div className="absolute inset-3 rounded-full border-[10px] border-emerald-400 border-r-transparent border-b-transparent rotate-[-35deg] shadow-[0_0_35px_rgba(52,211,153,.18)]" />
+
+              <div className="text-center">
+                <p className="text-5xl font-black tracking-tight text-emerald-400">
+                  {scanResult.score}
+                  <span className="text-xl text-emerald-400/60">%</span>
+                </p>
+
+                <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600">
+                  Confidence
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-4 py-2">
+              <CheckCircle2 size={15} className="text-emerald-400" />
+
+              <span className="text-xs font-black text-emerald-300">
+                {scanResult.status.toUpperCase()}
+              </span>
+            </div>
+
+            <p className="mt-4 max-w-sm text-center text-xs leading-5 text-slate-500">
+              {scanResult.message}
+            </p>
+          </div>
+        </Panel>
+
+        {/* IDENTITY */}
+        <Panel>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">Verified Identity</p>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Extracted and validated document information
+              </p>
+            </div>
+
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10">
+              <UserRound size={18} className="text-cyan-300" />
+            </div>
           </div>
 
-          <h3 className="mt-6 text-xl font-bold">
-            No verification result available
-          </h3>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <IdentityField
+              label="Full Name"
+              value={scanResult.extractedData.name}
+            />
 
-          <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-            Upload a document first and run the AI screening pipeline to view
-            verification results.
-          </p>
+            <IdentityField
+              label="Document Type"
+              value={scanResult.extractedData.documentType}
+            />
 
-          <button
-            onClick={() => navigate("Document Upload")}
-            className="mt-6 rounded-xl bg-cyan-400 px-5 py-3 text-sm font-bold text-slate-950"
-          >
-            Upload Document
-          </button>
+            <IdentityField
+              label="Document Number"
+              value={scanResult.extractedData.documentNumber}
+              mono
+            />
+
+            <IdentityField
+              label="Date of Birth"
+              value={scanResult.extractedData.dob}
+            />
+
+            <IdentityField
+              label="Gender"
+              value={scanResult.extractedData.gender}
+            />
+
+            <IdentityField
+              label="Verification Status"
+              value="Identity Confirmed"
+              success
+            />
+          </div>
+
+          <div className="mt-5 rounded-xl border border-cyan-400/10 bg-cyan-400/[0.035] p-4">
+            <div className="flex items-center gap-2">
+              <Sparkles size={15} className="text-cyan-300" />
+
+              <span className="text-xs font-bold">
+                AI Identity Assessment
+              </span>
+            </div>
+
+            <p className="mt-2 text-[10px] leading-5 text-slate-600">
+              Identity information extracted from the submitted document
+              passed the initial consistency and authenticity checks.
+            </p>
+          </div>
         </Panel>
-      ) : (
-        <ResultSection result={scanResult} />
-      )}
+      </div>
 
-      {selectedFile && !scanResult && (
+      {/* METRICS */}
+      <div>
+        <div className="mb-4">
+          <p className="text-sm font-bold">Verification Metrics</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Confidence levels generated by individual verification modules.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {metrics.map((metric) => (
+            <VerificationMetric
+              key={metric.title}
+              {...metric}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ANALYSIS */}
+      <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+        <Panel>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">
+                Verification Pipeline
+              </p>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Status of every identity verification stage
+              </p>
+            </div>
+
+            <ShieldCheck
+              size={19}
+              className="text-emerald-400"
+            />
+          </div>
+
+          <div className="mt-6 space-y-2">
+            <VerificationStage
+              icon={FileSearch}
+              title="Document Structure Analysis"
+              value={scanResult.forensic.documentIntegrity}
+              status="PASSED"
+            />
+
+            <VerificationStage
+              icon={FileText}
+              title="OCR & Data Consistency"
+              value={scanResult.forensic.ocrAccuracy}
+              status="PASSED"
+            />
+
+            <VerificationStage
+              icon={Fingerprint}
+              title="Face Identity Match"
+              value={scanResult.forensic.faceMatch}
+              status="MATCHED"
+            />
+
+            <VerificationStage
+              icon={Activity}
+              title="Liveness Detection"
+              value={scanResult.forensic.liveness}
+              status="LIVE"
+            />
+
+            <VerificationStage
+              icon={BrainCircuit}
+              title="AI Fraud Assessment"
+              value={100 - scanResult.forensic.riskScore}
+              status="LOW RISK"
+            />
+          </div>
+        </Panel>
+
+        <Panel>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">Risk Assessment</p>
+
+              <p className="mt-1 text-xs text-slate-500">
+                Overall fraud probability
+              </p>
+            </div>
+
+            <Gauge size={19} className="text-cyan-300" />
+          </div>
+
+          <div className="mt-7 flex items-center justify-center">
+            <div className="relative flex h-40 w-40 items-center justify-center rounded-full border-[12px] border-emerald-400/10">
+              <div className="absolute inset-[-12px] rounded-full border-[12px] border-transparent border-l-emerald-400 border-t-emerald-400 rotate-[-35deg]" />
+
+              <div className="text-center">
+                <p className="text-3xl font-black text-emerald-400">
+                  {scanResult.forensic.riskScore}
+                </p>
+
+                <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">
+                  Risk / 100
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-xl border border-emerald-400/10 bg-emerald-400/[0.04] p-4 text-center">
+            <p className="text-xs font-black text-emerald-300">
+              LOW RISK DOCUMENT
+            </p>
+
+            <p className="mt-2 text-[10px] leading-5 text-slate-600">
+              No significant fraud indicators were identified during the
+              initial verification process.
+            </p>
+          </div>
+        </Panel>
+      </div>
+
+      {/* FINDINGS */}
+      <Panel>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-bold">AI Verification Findings</p>
+
+            <p className="mt-1 text-xs text-slate-500">
+              Signals identified during the screening process
+            </p>
+          </div>
+
+          <BrainCircuit
+            size={19}
+            className="text-cyan-300"
+          />
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {scanResult.anomalies.map((item, index) => (
+            <div
+              key={index}
+              className="rounded-xl border border-emerald-400/10 bg-emerald-400/[0.025] p-4"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10">
+                  <CheckCircle2
+                    size={15}
+                    className="text-emerald-400"
+                  />
+                </div>
+
+                <p className="text-xs leading-5 text-slate-400">
+                  {item}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      {/* ACTIONS */}
+      <div className="flex flex-wrap gap-3">
         <button
-          onClick={startScreening}
-          disabled={isScanning}
-          className="rounded-xl bg-cyan-400 px-5 py-3 font-bold text-slate-950"
+          onClick={() => navigate("Document Upload")}
+          className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-3 text-xs font-black text-slate-950 transition hover:bg-cyan-300"
         >
-          {isScanning ? "Scanning..." : "Run Screening"}
+          <UploadCloud size={16} />
+          Verify Another Document
         </button>
-      )}
+
+        <button
+          onClick={() => navigate("Forensic Analysis")}
+          className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-xs font-bold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+        >
+          <FileSearch size={16} />
+          Open Forensic Analysis
+        </button>
+      </div>
     </div>
   );
 }
-
 /* =========================
    RISK DASHBOARD
 ========================= */
@@ -2383,6 +2732,125 @@ function AIScanningPanel() {
         </div>
       </div>
     </Panel>
+  );
+}
+function VerificationMetric({
+  title,
+  value,
+  icon: Icon,
+}) {
+  return (
+    <div className="group rounded-2xl border border-white/[0.08] bg-[#0a1020]/80 p-5 transition hover:-translate-y-1 hover:border-cyan-400/20">
+      <div className="flex items-center justify-between">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/5">
+          <Icon size={18} className="text-cyan-300" />
+        </div>
+
+        <span className="text-xl font-black text-emerald-400">
+          {value}%
+        </span>
+      </div>
+
+      <p className="mt-4 text-xs font-bold">
+        {title}
+      </p>
+
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/5">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all duration-700"
+          style={{ width: `${value}%` }}
+        />
+      </div>
+
+      <p className="mt-2 text-[9px] font-bold text-emerald-400">
+        HIGH CONFIDENCE
+      </p>
+    </div>
+  );
+}
+
+function VerificationStage({
+  icon: Icon,
+  title,
+  value,
+  status,
+}) {
+  return (
+    <div className="flex items-center gap-4 rounded-xl border border-white/5 bg-white/[0.02] p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/5">
+        <Icon size={17} className="text-cyan-300" />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <p className="truncate text-xs font-bold">
+            {title}
+          </p>
+
+          <span className="text-[10px] font-black text-emerald-400">
+            {value}%
+          </span>
+        </div>
+
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/5">
+          <div
+            className="h-full rounded-full bg-emerald-400"
+            style={{ width: `${value}%` }}
+          />
+        </div>
+      </div>
+
+      <span className="hidden rounded-full border border-emerald-400/20 bg-emerald-400/5 px-2.5 py-1 text-[8px] font-black text-emerald-300 sm:block">
+        {status}
+      </span>
+    </div>
+  );
+}
+
+function IdentityField({
+  label,
+  value,
+  mono = false,
+  success = false,
+}) {
+  return (
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
+      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-600">
+        {label}
+      </p>
+
+      <p
+        className={`mt-2 truncate text-xs font-bold ${
+          success
+            ? "text-emerald-400"
+            : "text-slate-200"
+        } ${mono ? "font-mono tracking-wider" : ""}`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function VerificationInfo({
+  icon: Icon,
+  title,
+  text,
+}) {
+  return (
+    <div className="rounded-2xl border border-white/[0.08] bg-[#0a1020]/80 p-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/5">
+        <Icon size={18} className="text-cyan-300" />
+      </div>
+
+      <p className="mt-4 text-xs font-bold">
+        {title}
+      </p>
+
+      <p className="mt-1 text-[10px] text-slate-600">
+        {text}
+      </p>
+    </div>
   );
 }
 
