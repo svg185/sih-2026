@@ -3468,6 +3468,197 @@ function CheckRow({ title, value }) {
     </div>
   );
 }
+function SettingsPage({ settings, setSettings }) {
+  return (
+    <div className="mx-auto max-w-7xl space-y-7">
+
+      <PageHeading
+        eyebrow="SYSTEM CONFIGURATION"
+        title="Settings"
+        description="Manage AI screening, biometric verification and security modules."
+      />
+
+      {/* Security Modules */}
+      <section>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-white">
+            Security Modules
+          </h2>
+          <p className="text-sm text-slate-400">
+            Enable or disable individual screening components.
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <SettingRow
+            icon={BrainCircuit}
+            title="AI Document Screening"
+            description="AI-based document authenticity analysis."
+            enabled={settings.aiScreening}
+            onToggle={() =>
+              setSettings((prev) => ({
+                ...prev,
+                aiScreening: !prev.aiScreening,
+              }))
+            }
+          />
+
+          <SettingRow
+            icon={Fingerprint}
+            title="Biometric Verification"
+            description="Face matching and liveness verification."
+            enabled={settings.biometric}
+            onToggle={() =>
+              setSettings((prev) => ({
+                ...prev,
+                biometric: !prev.biometric,
+              }))
+            }
+          />
+
+          <SettingRow
+            icon={Bell}
+            title="Security Alerts"
+            description="Generate alerts for high-risk screening events."
+            enabled={settings.alerts}
+            onToggle={() =>
+              setSettings((prev) => ({
+                ...prev,
+                alerts: !prev.alerts,
+              }))
+            }
+          />
+
+          <SettingRow
+            icon={Database}
+            title="External Database"
+            description="Verify identity against external databases."
+            enabled={settings.externalDatabase}
+            onToggle={() =>
+              setSettings((prev) => ({
+                ...prev,
+                externalDatabase: !prev.externalDatabase,
+              }))
+            }
+          />
+        </div>
+      </section>
+
+      {/* System Health */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+        <h2 className="text-lg font-semibold text-white">
+          System Health
+        </h2>
+
+        <div className="mt-5 space-y-3">
+          <SystemHealthRow
+            title="AI Screening Engine"
+            status="Operational"
+          />
+
+          <SystemHealthRow
+            title="Biometric Engine"
+            status="Operational"
+          />
+
+          <SystemHealthRow
+            title="Forensic Analysis"
+            status="Operational"
+          />
+
+          <SystemHealthRow
+            title="API Gateway"
+            status="Demo Mode"
+          />
+        </div>
+      </section>
+
+      {/* Current Configuration */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+        <h2 className="text-lg font-semibold text-white">
+          Current Configuration
+        </h2>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-3">
+          <ConfigurationCard
+            title="AI Screening"
+            enabled={settings.aiScreening}
+          />
+
+          <ConfigurationCard
+            title="Biometric"
+            enabled={settings.biometric}
+          />
+
+          <ConfigurationCard
+            title="Security Alerts"
+            enabled={settings.alerts}
+          />
+        </div>
+      </section>
+
+      {/* Security & Privacy */}
+      <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
+        <h2 className="text-lg font-semibold text-white">
+          Security & Privacy
+        </h2>
+
+        <div className="mt-5 space-y-3">
+          <SecurityStatus text="Encrypted document processing" />
+          <SecurityStatus text="Secure screening sessions" />
+          <SecurityStatus text="Audit logging enabled" />
+          <SecurityStatus text="Sensitive data masked in dashboard" />
+        </div>
+      </section>
+
+    </div>
+  );
+}
+
+function SystemHealthRow({ title, status }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-white/5 bg-slate-950/50 px-4 py-4">
+      <span className="text-sm text-slate-300">
+        {title}
+      </span>
+
+      <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-400">
+        {status}
+      </span>
+    </div>
+  );
+}
+
+function ConfigurationCard({ title, enabled }) {
+  return (
+    <div className="rounded-xl border border-white/5 bg-slate-950/50 p-5">
+      <p className="text-sm text-slate-400">
+        {title}
+      </p>
+
+      <p
+        className={`mt-2 text-lg font-semibold ${
+          enabled ? "text-emerald-400" : "text-slate-500"
+        }`}
+      >
+        {enabled ? "Enabled" : "Disabled"}
+      </p>
+    </div>
+  );
+}
+
+function SecurityStatus({ text }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-950/50 px-4 py-3">
+      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+
+      <span className="text-sm text-slate-300">
+        {text}
+      </span>
+    </div>
+  );
+}
+
 
 function SettingRow({
   icon: Icon,
