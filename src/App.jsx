@@ -3299,196 +3299,277 @@ function CheckRow({ title, value }) {
   );
 }
 function SettingsPage({ settings, setSettings }) {
+  const [healthRefreshing, setHealthRefreshing] = useState(false);
+  const [lastChecked, setLastChecked] = useState("Just now");
+  const [securityMode, setSecurityMode] = useState("Balanced");
+  const [saved, setSaved] = useState(false);
+
+  const refreshHealth = () => {
+    if (healthRefreshing) return;
+    setHealthRefreshing(true);
+    setTimeout(() => {
+      setHealthRefreshing(false);
+      setLastChecked("Just now");
+    }, 900);
+  };
+
+  const resetSettings = () => {
+    setSettings({
+      aiScreening: true,
+      biometric: true,
+      alerts: true,
+      externalDatabase: false,
+    });
+    setSecurityMode("Balanced");
+    setSaved(false);
+  };
+
+  const saveConfiguration = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1800);
+  };
+
+  const enabledCount = [
+    settings.aiScreening,
+    settings.biometric,
+    settings.alerts,
+    settings.externalDatabase,
+  ].filter(Boolean).length;
+
   return (
     <div className="mx-auto max-w-7xl space-y-7">
-
       <PageHeading
         eyebrow="SYSTEM CONFIGURATION"
-        title="Settings"
-        description="Manage AI screening, biometric verification and security modules."
+        title="Settings & System Health"
+        description="Configure screening modules, security posture and monitor frontend system health."
+        action={
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={resetSettings}
+              className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+            >
+              Reset
+            </button>
+            <button
+              type="button"
+              onClick={saveConfiguration}
+              className="rounded-xl bg-cyan-400 px-4 py-2.5 text-xs font-black text-slate-950 transition hover:bg-cyan-300"
+            >
+              {saved ? "Saved ✓" : "Save Configuration"}
+            </button>
+          </div>
+        }
       />
 
-      {/* Security Modules */}
-      <section>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-white">
-            Security Modules
-          </h2>
-          <p className="text-sm text-slate-400">
-            Enable or disable individual screening components.
-          </p>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <SettingsMetric title="Modules Active" value={`${enabledCount}/4`} icon={ShieldCheck} />
+        <SettingsMetric title="Security Mode" value={securityMode} icon={LockKeyhole} />
+        <SettingsMetric title="AI Engine" value="99.8%" icon={BrainCircuit} />
+        <SettingsMetric title="System Status" value="Operational" icon={Activity} />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.4fr_0.9fr]">
+        <Panel>
+          <div className="mb-5">
+            <p className="text-sm font-bold">Security Modules</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Control which verification layers are enabled for the screening workflow.
+            </p>
+          </div>
+
+          <div className="divide-y divide-white/5">
+            <SettingRow
+              icon={BrainCircuit}
+              title="AI Document Screening"
+              description="AI-based document authenticity analysis."
+              enabled={settings.aiScreening}
+              onToggle={() => setSettings((prev) => ({ ...prev, aiScreening: !prev.aiScreening }))}
+            />
+            <SettingRow
+              icon={Fingerprint}
+              title="Biometric Verification"
+              description="Face matching and liveness verification."
+              enabled={settings.biometric}
+              onToggle={() => setSettings((prev) => ({ ...prev, biometric: !prev.biometric }))}
+            />
+            <SettingRow
+              icon={Bell}
+              title="Security Alerts"
+              description="Generate alerts for high-risk screening events."
+              enabled={settings.alerts}
+              onToggle={() => setSettings((prev) => ({ ...prev, alerts: !prev.alerts }))}
+            />
+            <SettingRow
+              icon={Database}
+              title="External Database"
+              description="Identity database integration is disabled in frontend demo mode."
+              enabled={settings.externalDatabase}
+              onToggle={() => setSettings((prev) => ({ ...prev, externalDatabase: !prev.externalDatabase }))}
+            />
+          </div>
+        </Panel>
+
+        <Panel>
+          <div className="mb-5">
+            <p className="text-sm font-bold">Security Posture</p>
+            <p className="mt-1 text-xs text-slate-500">Choose the UI configuration profile for screening operations.</p>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              ["Strict", "Maximum verification controls", "High"],
+              ["Balanced", "Recommended screening workflow", "Medium"],
+              ["Fast", "Prioritize screening speed", "Low"],
+            ].map(([name, text, level]) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => setSecurityMode(name)}
+                className={`w-full rounded-2xl border p-4 text-left transition ${
+                  securityMode === name
+                    ? "border-cyan-400/30 bg-cyan-400/[0.06]"
+                    : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-white">{name}</p>
+                    <p className="mt-1 text-[10px] text-slate-500">{text}</p>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${
+                    level === "High" ? "bg-red-400/10 text-red-300" : level === "Medium" ? "bg-amber-400/10 text-amber-300" : "bg-emerald-400/10 text-emerald-300"
+                  }`}>{level}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </Panel>
+      </div>
+
+      <Panel>
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold">System Health</p>
+            <p className="mt-1 text-xs text-slate-500">Frontend demonstration of service health and readiness indicators.</p>
+          </div>
+          <button
+            type="button"
+            onClick={refreshHealth}
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[10px] font-bold text-slate-300 hover:bg-white/[0.06] hover:text-white"
+          >
+            <Activity size={14} className={healthRefreshing ? "animate-spin" : ""} />
+            {healthRefreshing ? "Checking..." : "Refresh Health"}
+          </button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <SettingRow
-            icon={BrainCircuit}
-            title="AI Document Screening"
-            description="AI-based document authenticity analysis."
-            enabled={settings.aiScreening}
-            onToggle={() =>
-              setSettings((prev) => ({
-                ...prev,
-                aiScreening: !prev.aiScreening,
-              }))
-            }
-          />
-
-          <SettingRow
-            icon={Fingerprint}
-            title="Biometric Verification"
-            description="Face matching and liveness verification."
-            enabled={settings.biometric}
-            onToggle={() =>
-              setSettings((prev) => ({
-                ...prev,
-                biometric: !prev.biometric,
-              }))
-            }
-          />
-
-          <SettingRow
-            icon={Bell}
-            title="Security Alerts"
-            description="Generate alerts for high-risk screening events."
-            enabled={settings.alerts}
-            onToggle={() =>
-              setSettings((prev) => ({
-                ...prev,
-                alerts: !prev.alerts,
-              }))
-            }
-          />
-
-          <SettingRow
-            icon={Database}
-            title="External Database"
-            description="Verify identity against external databases."
-            enabled={settings.externalDatabase}
-            onToggle={() =>
-              setSettings((prev) => ({
-                ...prev,
-                externalDatabase: !prev.externalDatabase,
-              }))
-            }
-          />
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <HealthCard title="AI Screening Engine" status="Operational" value="99.8%" />
+          <HealthCard title="Biometric Engine" status="Operational" value="97.9%" />
+          <HealthCard title="Forensic Analysis" status="Operational" value="98.4%" />
+          <HealthCard title="API Gateway" status="Demo Mode" value="Frontend" demo />
         </div>
-      </section>
 
-      {/* System Health */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-        <h2 className="text-lg font-semibold text-white">
-          System Health
-        </h2>
-
-        <div className="mt-5 space-y-3">
-          <SystemHealthRow
-            title="AI Screening Engine"
-            status="Operational"
-          />
-
-          <SystemHealthRow
-            title="Biometric Engine"
-            status="Operational"
-          />
-
-          <SystemHealthRow
-            title="Forensic Analysis"
-            status="Operational"
-          />
-
-          <SystemHealthRow
-            title="API Gateway"
-            status="Demo Mode"
-          />
+        <div className="mt-4 flex items-center gap-2 text-[10px] text-slate-600">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          Last health check: {lastChecked}
         </div>
-      </section>
+      </Panel>
 
-      {/* Current Configuration */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-        <h2 className="text-lg font-semibold text-white">
-          Current Configuration
-        </h2>
+      <div className="grid gap-5 md:grid-cols-2">
+        <Panel>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-400/10">
+              <LockKeyhole size={18} className="text-cyan-300" />
+            </div>
+            <div>
+              <p className="text-sm font-bold">Security & Privacy</p>
+              <p className="text-xs text-slate-500">Dashboard protection controls</p>
+            </div>
+          </div>
+          <div className="mt-5 space-y-3">
+            <SecurityStatus text="Sensitive document identifiers are masked" />
+            <SecurityStatus text="Upload validation is enabled" />
+            <SecurityStatus text="Audit activity is available" />
+            <SecurityStatus text="No frontend API keys are exposed" />
+          </div>
+        </Panel>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
-          <ConfigurationCard
-            title="AI Screening"
-            enabled={settings.aiScreening}
-          />
-
-          <ConfigurationCard
-            title="Biometric"
-            enabled={settings.biometric}
-          />
-
-          <ConfigurationCard
-            title="Security Alerts"
-            enabled={settings.alerts}
-          />
-        </div>
-      </section>
-
-      {/* Security & Privacy */}
-      <section className="rounded-2xl border border-white/10 bg-slate-900/60 p-6">
-        <h2 className="text-lg font-semibold text-white">
-          Security & Privacy
-        </h2>
-
-        <div className="mt-5 space-y-3">
-          <SecurityStatus text="Encrypted document processing" />
-          <SecurityStatus text="Secure screening sessions" />
-          <SecurityStatus text="Audit logging enabled" />
-          <SecurityStatus text="Sensitive data masked in dashboard" />
-        </div>
-      </section>
-
+        <Panel>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-400/10">
+              <Zap size={18} className="text-purple-300" />
+            </div>
+            <div>
+              <p className="text-sm font-bold">Current Configuration</p>
+              <p className="text-xs text-slate-500">Active screening capabilities</p>
+            </div>
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <ConfigurationCard title="AI Screening" enabled={settings.aiScreening} />
+            <ConfigurationCard title="Biometric" enabled={settings.biometric} />
+            <ConfigurationCard title="Alerts" enabled={settings.alerts} />
+            <ConfigurationCard title="External DB" enabled={settings.externalDatabase} />
+          </div>
+        </Panel>
+      </div>
     </div>
   );
 }
 
-function SystemHealthRow({ title, status }) {
+function SettingsMetric({ title, value, icon: Icon }) {
   return (
-    <div className="flex items-center justify-between rounded-xl border border-white/5 bg-slate-950/50 px-4 py-4">
-      <span className="text-sm text-slate-300">
-        {title}
-      </span>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 backdrop-blur-xl">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-600">{title}</span>
+        <Icon size={16} className="text-cyan-300" />
+      </div>
+      <p className="mt-3 text-xl font-black text-white">{value}</p>
+    </div>
+  );
+}
 
-      <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-400">
-        {status}
-      </span>
+function HealthCard({ title, status, value, demo = false }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-slate-300">{title}</span>
+        <span className={`h-2 w-2 rounded-full ${demo ? "bg-amber-400" : "bg-emerald-400"}`} />
+      </div>
+      <div className="mt-4 flex items-end justify-between gap-2">
+        <div>
+          <p className={`text-[10px] font-bold ${demo ? "text-amber-300" : "text-emerald-300"}`}>{status}</p>
+          <p className="mt-1 text-[10px] text-slate-600">{value}</p>
+        </div>
+        <Activity size={16} className="text-slate-700" />
+      </div>
+    </div>
+  );
+}
+
+
+function SecurityStatus({ text }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-3">
+      <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
+      <span className="text-[10px] text-slate-400">{text}</span>
     </div>
   );
 }
 
 function ConfigurationCard({ title, enabled }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-slate-950/50 p-5">
-      <p className="text-sm text-slate-400">
-        {title}
-      </p>
-
-      <p
-        className={`mt-2 text-lg font-semibold ${
-          enabled ? "text-emerald-400" : "text-slate-500"
-        }`}
-      >
+    <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-semibold text-slate-400">{title}</span>
+        <span className={`h-2 w-2 rounded-full ${enabled ? "bg-emerald-400" : "bg-slate-600"}`} />
+      </div>
+      <p className={`mt-2 text-[9px] font-bold uppercase tracking-wider ${enabled ? "text-emerald-300" : "text-slate-600"}`}>
         {enabled ? "Enabled" : "Disabled"}
       </p>
     </div>
   );
 }
-
-function SecurityStatus({ text }) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-950/50 px-4 py-3">
-      <span className="h-2 w-2 rounded-full bg-emerald-400" />
-
-      <span className="text-sm text-slate-300">
-        {text}
-      </span>
-    </div>
-  );
-}
-
 
 function SettingRow({
   icon: Icon,
