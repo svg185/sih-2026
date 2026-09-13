@@ -2331,6 +2331,10 @@ function EvidenceSignal({ icon: Icon, title, value, description, danger = false 
    AUDIT LOGS
 ========================= */
 function AuditLogs({ history }) {
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("ALL");
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
   const auditEvents = [
     {
       id: 1,
@@ -2341,6 +2345,9 @@ function AuditLogs({ history }) {
       user: "AI Screening Engine",
       time: "2 min ago",
       status: "SUCCESS",
+      module: "Verification",
+      severity: "Low",
+      eventId: "AUD-10482",
     },
     {
       id: 2,
@@ -2351,6 +2358,9 @@ function AuditLogs({ history }) {
       user: "Risk Engine",
       time: "18 min ago",
       status: "WARNING",
+      module: "Forensic Analysis",
+      severity: "Medium",
+      eventId: "AUD-10481",
     },
     {
       id: 3,
@@ -2361,6 +2371,9 @@ function AuditLogs({ history }) {
       user: "Verification Portal",
       time: "31 min ago",
       status: "INFO",
+      module: "Document Upload",
+      severity: "Low",
+      eventId: "AUD-10480",
     },
     {
       id: 4,
@@ -2371,6 +2384,9 @@ function AuditLogs({ history }) {
       user: "Risk Intelligence",
       time: "46 min ago",
       status: "CRITICAL",
+      module: "Investigation",
+      severity: "Critical",
+      eventId: "AUD-10479",
     },
     {
       id: 5,
@@ -2381,31 +2397,39 @@ function AuditLogs({ history }) {
       user: "Verification Engine",
       time: "1 hr ago",
       status: "SUCCESS",
+      module: "Verification",
+      severity: "Low",
+      eventId: "AUD-10478",
     },
   ];
 
+  const filteredEvents = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return auditEvents.filter((event) => {
+      const matchesFilter = filter === "ALL" || event.status === filter;
+      const matchesSearch =
+        !query ||
+        [event.title, event.description, event.user, event.module, event.eventId]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [search, filter]);
+
   const stats = [
-    {
-      title: "Total Events",
-      value: "1,284",
-      icon: Activity,
-    },
-    {
-      title: "Successful",
-      value: "1,102",
-      icon: CheckCircle2,
-    },
-    {
-      title: "Warnings",
-      value: "128",
-      icon: AlertTriangle,
-    },
-    {
-      title: "Critical",
-      value: "54",
-      icon: XCircle,
-    },
+    { title: "Total Events", value: "1,284", icon: Activity },
+    { title: "Successful", value: "1,102", icon: CheckCircle2 },
+    { title: "Warnings", value: "128", icon: AlertTriangle },
+    { title: "Critical", value: "54", icon: XCircle },
   ];
+
+  const clearFilters = () => {
+    setSearch("");
+    setFilter("ALL");
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-7">
@@ -2415,72 +2439,96 @@ function AuditLogs({ history }) {
         description="Monitor verification activity, security events and system operations."
       />
 
-      {/* Security status */}
       <div className="flex flex-col gap-4 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.03] p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-400/10">
-            <ShieldCheck
-              size={21}
-              className="text-emerald-400"
-            />
+            <ShieldCheck size={21} className="text-emerald-400" />
           </div>
-
           <div>
-            <p className="text-sm font-bold text-white">
-              Security Monitoring Active
-            </p>
-
+            <p className="text-sm font-bold text-white">Security Monitoring Active</p>
             <p className="mt-1 text-xs text-slate-500">
-              All screening and investigation activities are being logged.
+              Audit events are available for security review and investigation.
             </p>
           </div>
         </div>
-
         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
           <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.8)]" />
           System Online
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((item) => (
-          <AuditStatCard
-            key={item.title}
-            title={item.title}
-            value={item.value}
-            icon={item.icon}
-          />
+          <AuditStatCard key={item.title} {...item} />
         ))}
       </div>
 
-      {/* Main content */}
-      <div className="grid gap-6 xl:grid-cols-[1.5fr_0.5fr]">
-        {/* Timeline */}
-        <Panel>
-          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-bold">
-                Security Activity
-              </p>
+      <Panel>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-bold">Audit Event Explorer</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Search events and filter security activity by severity.
+            </p>
+          </div>
 
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative min-w-[240px]">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search audit events..."
+                className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-slate-700 focus:border-cyan-400/30"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 transition hover:border-cyan-400/20 hover:text-cyan-300"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          {["ALL", "SUCCESS", "INFO", "WARNING", "CRITICAL"].map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setFilter(item)}
+              className={`rounded-lg border px-3 py-2 text-[9px] font-bold uppercase tracking-wider transition ${
+                filter === item
+                  ? "border-cyan-400/25 bg-cyan-400/10 text-cyan-300"
+                  : "border-white/10 bg-white/[0.02] text-slate-600 hover:text-slate-300"
+              }`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </Panel>
+
+      <div className="grid gap-6 xl:grid-cols-[1.45fr_0.55fr]">
+        <Panel>
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">Security Activity</p>
               <p className="mt-1 text-xs text-slate-500">
-                Latest events generated by the screening platform
+                {filteredEvents.length} visible event{filteredEvents.length === 1 ? "" : "s"}
               </p>
             </div>
-
             <div className="rounded-lg border border-cyan-400/10 bg-cyan-400/[0.03] px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider text-cyan-300">
-              LIVE LOG
+              AUDIT STREAM
             </div>
           </div>
 
-          <div className="relative">
-            <div className="absolute bottom-4 left-[19px] top-4 w-px bg-white/10" />
-
+          {filteredEvents.length ? (
             <div className="space-y-2">
-              {auditEvents.map((event) => {
+              {filteredEvents.map((event) => {
                 const Icon = event.icon;
-
+                const active = selectedEvent?.id === event.id;
                 const tone =
                   event.type === "success"
                     ? "text-emerald-400 bg-emerald-400/10 border-emerald-400/15"
@@ -2491,207 +2539,143 @@ function AuditLogs({ history }) {
                         : "text-cyan-400 bg-cyan-400/10 border-cyan-400/15";
 
                 return (
-                  <div
+                  <button
                     key={event.id}
-                    className="relative flex gap-4 rounded-xl p-3 transition hover:bg-white/[0.025]"
+                    type="button"
+                    onClick={() => setSelectedEvent(event)}
+                    className={`w-full rounded-xl border p-3 text-left transition ${
+                      active
+                        ? "border-cyan-400/20 bg-cyan-400/[0.05]"
+                        : "border-transparent hover:border-white/5 hover:bg-white/[0.025]"
+                    }`}
                   >
-                    <div
-                      className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${tone}`}
-                    >
-                      <Icon size={17} />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <p className="text-xs font-bold text-white">
-                            {event.title}
-                          </p>
-
-                          <p className="mt-1 text-[10px] leading-5 text-slate-500">
-                            {event.description}
-                          </p>
+                    <div className="flex gap-4">
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${tone}`}>
+                        <Icon size={17} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="text-xs font-bold text-white">{event.title}</p>
+                            <p className="mt-1 text-[10px] leading-5 text-slate-500">{event.description}</p>
+                          </div>
+                          <span className="w-fit rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[8px] font-bold text-slate-400">
+                            {event.status}
+                          </span>
                         </div>
-
-                        <span
-                          className={`w-fit rounded-full border px-2 py-1 text-[8px] font-bold ${
-                            event.type === "success"
-                              ? "border-emerald-400/15 bg-emerald-400/5 text-emerald-300"
-                              : event.type === "warning"
-                                ? "border-amber-400/15 bg-amber-400/5 text-amber-300"
-                                : event.type === "danger"
-                                  ? "border-red-400/15 bg-red-400/5 text-red-300"
-                                  : "border-cyan-400/15 bg-cyan-400/5 text-cyan-300"
-                          }`}
-                        >
-                          {event.status}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-3 text-[9px] text-slate-600">
-                        <span>{event.user}</span>
-                        <span>•</span>
-                        <span>{event.time}</span>
+                        <div className="mt-3 flex flex-wrap items-center gap-3 text-[9px] text-slate-600">
+                          <span>{event.user}</span>
+                          <span>•</span>
+                          <span>{event.module}</span>
+                          <span>•</span>
+                          <span>{event.time}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
-          </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-white/10 py-12 text-center">
+              <Search size={22} className="mx-auto text-slate-700" />
+              <p className="mt-3 text-xs font-bold text-slate-400">No matching audit events</p>
+              <p className="mt-1 text-[10px] text-slate-600">Try another search or clear the filters.</p>
+            </div>
+          )}
         </Panel>
 
-        {/* Security Summary */}
         <div className="space-y-6">
           <Panel>
-            <p className="text-sm font-bold">
-              Security Summary
-            </p>
-
-            <p className="mt-1 text-xs text-slate-500">
-              Current audit distribution
-            </p>
-
-            <div className="mt-6 space-y-5">
-              <AuditProgress
-                label="Successful Events"
-                value={86}
-                tone="green"
-              />
-
-              <AuditProgress
-                label="Warning Events"
-                value={10}
-                tone="yellow"
-              />
-
-              <AuditProgress
-                label="Critical Events"
-                value={4}
-                tone="red"
-              />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold">Event Details</p>
+                <p className="mt-1 text-xs text-slate-500">Select an event to inspect it.</p>
+              </div>
+              {selectedEvent && (
+                <button type="button" onClick={() => setSelectedEvent(null)} className="text-slate-600 hover:text-white">
+                  <X size={15} />
+                </button>
+              )}
             </div>
+
+            {selectedEvent ? (
+              <div className="mt-6 space-y-4">
+                <div className="rounded-xl border border-cyan-400/10 bg-cyan-400/[0.03] p-4">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-cyan-300">{selectedEvent.eventId}</p>
+                  <p className="mt-2 text-sm font-bold text-white">{selectedEvent.title}</p>
+                  <p className="mt-2 text-[10px] leading-5 text-slate-500">{selectedEvent.description}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <AuditDetail label="Module" value={selectedEvent.module} />
+                  <AuditDetail label="Severity" value={selectedEvent.severity} />
+                  <AuditDetail label="Actor" value={selectedEvent.user} />
+                  <AuditDetail label="Time" value={selectedEvent.time} />
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={15} className="text-emerald-400" />
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">Integrity Status</p>
+                  </div>
+                  <p className="mt-2 text-[10px] leading-5 text-slate-600">
+                    Event record is part of the frontend demonstration audit dataset.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 rounded-xl border border-dashed border-white/10 py-12 text-center">
+                <History size={22} className="mx-auto text-slate-700" />
+                <p className="mt-3 text-xs font-bold text-slate-400">No event selected</p>
+                <p className="mt-1 text-[10px] text-slate-600">Click any event from the audit stream.</p>
+              </div>
+            )}
           </Panel>
 
           <Panel>
-            <div className="flex items-center gap-3">
-              <LockKeyhole
-                size={18}
-                className="text-cyan-400"
-              />
-
-              <div>
-                <p className="text-xs font-bold text-white">
-                  Audit Protection
-                </p>
-
-                <p className="mt-1 text-[10px] text-slate-600">
-                  Event records are tracked for security review.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-3">
-              <AuditCheck
-                label="Event Tracking"
-                value="ACTIVE"
-              />
-
-              <AuditCheck
-                label="Screening Logs"
-                value="ACTIVE"
-              />
-
-              <AuditCheck
-                label="Risk Events"
-                value="ACTIVE"
-              />
-
-              <AuditCheck
-                label="Investigation Logs"
-                value="ACTIVE"
-              />
+            <p className="text-sm font-bold">Security Summary</p>
+            <p className="mt-1 text-xs text-slate-500">Current audit distribution</p>
+            <div className="mt-6 space-y-5">
+              <AuditProgress label="Successful Events" value={86} tone="green" />
+              <AuditProgress label="Warning Events" value={10} tone="yellow" />
+              <AuditProgress label="Critical Events" value={4} tone="red" />
             </div>
           </Panel>
         </div>
       </div>
 
-      {/* Recent screening records */}
       <Panel>
         <div className="mb-5">
-          <p className="text-sm font-bold">
-            Recent Screening Records
-          </p>
-
-          <p className="mt-1 text-xs text-slate-500">
-            Latest documents processed by the system
-          </p>
+          <p className="text-sm font-bold">Recent Screening Records</p>
+          <p className="mt-1 text-xs text-slate-500">Latest documents processed by the system</p>
         </div>
-
         <div className="overflow-x-auto">
           <table className="w-full min-w-[650px] text-left">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="px-3 py-3 text-[9px] uppercase tracking-wider text-slate-600">
-                  Document
-                </th>
-
-                <th className="px-3 py-3 text-[9px] uppercase tracking-wider text-slate-600">
-                  Type
-                </th>
-
-                <th className="px-3 py-3 text-[9px] uppercase tracking-wider text-slate-600">
-                  Result
-                </th>
-
-                <th className="px-3 py-3 text-[9px] uppercase tracking-wider text-slate-600">
-                  Score
-                </th>
-
-                <th className="px-3 py-3 text-right text-[9px] uppercase tracking-wider text-slate-600">
-                  Time
-                </th>
+                {['Document', 'Type', 'Result', 'Score', 'Time'].map((heading, index) => (
+                  <th key={heading} className={`px-3 py-3 text-[9px] uppercase tracking-wider text-slate-600 ${index === 4 ? 'text-right' : ''}`}>
+                    {heading}
+                  </th>
+                ))}
               </tr>
             </thead>
-
             <tbody>
               {history.slice(0, 5).map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-white/5 last:border-0"
-                >
+                <tr key={item.id} className="border-b border-white/5 last:border-0">
                   <td className="px-3 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400/5">
-                        <FileText
-                          size={14}
-                          className="text-cyan-300"
-                        />
+                        <FileText size={14} className="text-cyan-300" />
                       </div>
-
-                      <span className="text-xs font-semibold text-white">
-                        {item.file}
-                      </span>
+                      <span className="text-xs font-semibold text-white">{item.file}</span>
                     </div>
                   </td>
-
-                  <td className="px-3 py-4 text-[10px] text-slate-500">
-                    {item.type}
-                  </td>
-
-                  <td className="px-3 py-4">
-                    <StatusBadge status={item.status} />
-                  </td>
-
-                  <td className="px-3 py-4">
-                    <span className="text-xs font-bold text-cyan-300">
-                      {item.score}%
-                    </span>
-                  </td>
-
-                  <td className="px-3 py-4 text-right text-[10px] text-slate-600">
-                    {item.time}
-                  </td>
+                  <td className="px-3 py-4 text-[10px] text-slate-500">{item.type}</td>
+                  <td className="px-3 py-4"><StatusBadge status={item.status} /></td>
+                  <td className="px-3 py-4"><span className="text-xs font-bold text-cyan-300">{item.score}%</span></td>
+                  <td className="px-3 py-4 text-right text-[10px] text-slate-600">{item.time}</td>
                 </tr>
               ))}
             </tbody>
@@ -2699,27 +2683,26 @@ function AuditLogs({ history }) {
         </div>
       </Panel>
 
-      {/* Demo notice */}
       <div className="rounded-2xl border border-amber-400/10 bg-amber-400/[0.025] p-4">
         <div className="flex items-start gap-3">
-          <AlertTriangle
-            size={17}
-            className="mt-0.5 shrink-0 text-amber-400"
-          />
-
+          <AlertTriangle size={17} className="mt-0.5 shrink-0 text-amber-400" />
           <div>
-            <p className="text-xs font-bold text-white">
-              Demonstration Audit Dataset
-            </p>
-
+            <p className="text-xs font-bold text-white">Demonstration Audit Dataset</p>
             <p className="mt-1 text-[10px] leading-5 text-slate-600">
-              Current audit events are demonstration records. When the
-              backend is connected, this timeline will receive live
-              authentication, screening, risk and investigation events.
+              Current audit events are demonstration records. No live security event stream or sensitive audit data is connected in this frontend-only build.
             </p>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AuditDetail({ label, value }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+      <p className="text-[8px] font-bold uppercase tracking-wider text-slate-600">{label}</p>
+      <p className="mt-1 text-[10px] font-semibold text-slate-300">{value}</p>
     </div>
   );
 }
