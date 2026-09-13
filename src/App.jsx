@@ -494,6 +494,39 @@ function Header({
   search,
   setSearch,
 }) {
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "Suspicious document detected",
+      text: "Passport_User02.jpg requires analyst review.",
+      time: "18 min ago",
+      tone: "yellow",
+    },
+    {
+      id: 2,
+      title: "Fake document blocked",
+      text: "PAN_Card_Sample.pdf was flagged by the screening engine.",
+      time: "1 hr ago",
+      tone: "red",
+    },
+    {
+      id: 3,
+      title: "AI engine operational",
+      text: "All screening services are currently healthy.",
+      time: "2 hrs ago",
+      tone: "green",
+    },
+  ]);
+
+  const unreadCount = notifications.length;
+
+  const notificationTone = {
+    yellow: { icon: AlertTriangle, className: "text-amber-300 bg-amber-400/10" },
+    red: { icon: XCircle, className: "text-red-300 bg-red-400/10" },
+    green: { icon: ShieldCheck, className: "text-emerald-300 bg-emerald-400/10" },
+  };
+
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-[#050816]/80 backdrop-blur-xl">
       <div className="flex h-[78px] items-center gap-4 px-4 sm:px-6 lg:px-8">
@@ -525,14 +558,73 @@ function Header({
           </div>
         </div>
 
-        <button
-          type="button"
-          title="Notifications"
-          className="relative rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-slate-400 hover:text-white"
-        >
-          <Bell size={18} />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cyan-400" />
-        </button>
+        <div className="relative">
+          <button
+            type="button"
+            title="Notifications"
+            onClick={() => setNotificationsOpen((open) => !open)}
+            className="relative rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-slate-400 transition hover:border-cyan-400/20 hover:text-white"
+            aria-expanded={notificationsOpen}
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-[#050816] bg-cyan-400 px-1 text-[8px] font-black text-slate-950">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          {notificationsOpen && (
+            <div className="absolute right-0 top-14 z-50 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-white/10 bg-[#0a1020]/98 shadow-2xl shadow-black/40 backdrop-blur-xl">
+              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                <div>
+                  <p className="text-sm font-bold">Notifications</p>
+                  <p className="mt-0.5 text-[10px] text-slate-500">Security events and system alerts</p>
+                </div>
+                {notifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setNotifications([])}
+                    className="text-[10px] font-semibold text-cyan-300 hover:text-cyan-200"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+
+              <div className="max-h-[330px] overflow-y-auto p-2">
+                {notifications.length === 0 ? (
+                  <div className="px-5 py-8 text-center">
+                    <CheckCircle2 className="mx-auto text-emerald-400" size={24} />
+                    <p className="mt-3 text-xs font-semibold">You're all caught up</p>
+                    <p className="mt-1 text-[10px] text-slate-500">No new security notifications.</p>
+                  </div>
+                ) : (
+                  notifications.map((item) => {
+                    const tone = notificationTone[item.tone] || notificationTone.green;
+                    const Icon = tone.icon;
+                    return (
+                      <div key={item.id} className="group flex gap-3 rounded-xl p-3 transition hover:bg-white/[0.04]">
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone.className}`}>
+                          <Icon size={16} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold text-white">{item.title}</p>
+                          <p className="mt-1 text-[10px] leading-4 text-slate-500">{item.text}</p>
+                          <p className="mt-1.5 text-[9px] text-slate-600">{item.time}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="border-t border-white/10 px-4 py-2.5">
+                <p className="text-center text-[9px] uppercase tracking-[0.16em] text-slate-600">Demo security event feed</p>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="hidden h-9 w-px bg-white/10 sm:block" />
 
