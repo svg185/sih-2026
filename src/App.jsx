@@ -245,7 +245,24 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050816] text-white">
+    <div className="min-h-screen bg-[#050816] text-white antialiased">
+      <style>{`
+        @keyframes idguardPageIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            scroll-behavior: auto !important;
+          }
+        }
+        ::-webkit-scrollbar { width: 7px; height: 7px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(148,163,184,.18); border-radius: 999px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,.3); }
+      `}</style>
       <BackgroundGlow />
 
       <Sidebar
@@ -264,6 +281,11 @@ function App() {
         />
 
         <main className="p-4 sm:p-6 lg:p-8">
+          <div
+            key={activePage}
+            className="mx-auto max-w-[1800px]"
+            style={{ animation: "idguardPageIn .32s ease-out both" }}
+          >
           {activePage === "Dashboard" && (
             <Dashboard
               navigate={navigate}
@@ -318,6 +340,7 @@ function App() {
           {activePage === "Settings" && (
             <SettingsPage settings={settings} setSettings={setSettings} />
           )}
+          </div>
         </main>
       </div>
     </div>
